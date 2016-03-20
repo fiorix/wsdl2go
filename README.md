@@ -46,4 +46,4 @@ list of possible values, we generate the validation function using reflect
 to compare values.
 
 Once the code is generated, wsdl2go invokes gofmt from $GOROOT/bin/gofmt
-and will have if you don't have it installed.
+and will fail have if you don't have it installed.
