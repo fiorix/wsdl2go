@@ -28,4 +28,5 @@ Marshaler and Unmarshaler interfaces.
 
 The Go code generator (package wsdlgo) is capable of importing remote
 parts of the WSDL via HTTP. You can configure its http.Client to support
-authentication and self-signed certificates.
+authentication and self-signed certificates. Once the code is generated
+it invokes gofmt from $GOROOT/bin/gofmt. Will have if you don't have it.
