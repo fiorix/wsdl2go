@@ -1,0 +1,14 @@
+<definitions>
+
+<message name="newTermValues">
+  <part name="term" type="xs:string"/>
+  <part name="value" type="xs:string"/>
+</message>
+
+<portType name="glossaryTerms">
+  <operation name="setTerm">
+    <input name="newTerm" message="newTermValues"/>
+  </operation>
+</portType >
+
+</definitions>

@@ -1,0 +1,55 @@
+<!-- my hacked up memcache++ -->
+
+<definitions name="MemoryService"
+   targetNamespace="http://localhost:8080/EchoService.wsdl"
+   xmlns="http://schemas.xmlsoap.org/wsdl/"
+   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+   xmlns:tns="http://localhost:8080/EchoService.wsdl"
+
+   <import namespace="http://localhost:9999" location="http://localhost:9999/importer-root.wsdl"></import>
+
+   <binding name="MemoryService" type="tns:MemoryServicePortType">
+      <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+      <operation name="Get">
+         <soap:operation soapAction="Get"/>
+         <input>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </input>
+         <output>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </output>
+      </operation>
+
+      <operation name="Set">
+         <soap:operation soapAction="Set"/>
+         <input>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </input>
+         <output>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </output>
+      </operation>
+   </binding>
+
+   <service name="MemoryService">
+      <documentation>WSDL File for HelloService</documentation>
+      <port binding="tns:MemoryService" name="MemoryService">
+         <soap:address location="http://localhost:8080" />
+      </port>
+   </service>
+</definitions>
+
+

@@ -1,0 +1,12 @@
+package internal
+
+import (
+	"errors"
+
+	"golang.org/x/net/context"
+)
+
+// GetTerm was auto-generated from WSDL.
+func GetTerm(ctx context.Context, term string) (value string, err error) {
+	return "", errors.New("not implemented")
+}

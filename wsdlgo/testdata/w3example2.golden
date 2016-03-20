@@ -1,0 +1,22 @@
+package stockquotesoapbinding
+
+import (
+	"errors"
+
+	"golang.org/x/net/context"
+)
+
+// GetLastTradePrice was auto-generated from WSDL.
+func GetLastTradePrice(ctx context.Context, body *TradePriceRequest) (respBody *TradePriceResponse, err error) {
+	return &TradePriceResponse{}, errors.New("not implemented")
+}
+
+// TradePriceRequest was auto-generated from WSDL.
+type TradePriceRequest struct {
+	TickerSymbol string `xml:"tickerSymbol,omitempty"`
+}
+
+// TradePriceResponse was auto-generated from WSDL.
+type TradePriceResponse struct {
+	Price float64 `xml:"price,omitempty"`
+}

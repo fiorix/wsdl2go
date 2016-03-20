@@ -1,0 +1,36 @@
+<schema>
+  <element name="SetRequest">
+    <complexType>
+      <annotation>
+        <documentation>SetRequest carries a key-value pair.</documentation>
+      </annotation>
+      <sequence>
+        <element name="Key" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+        <element name="Value" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+        <element name="Expiration" type="xsd:duration" minOccurs="0"/>
+      </sequence>
+    </complexType>
+  </element>
+
+  <complexType name="GetResponse">
+   <annotation>
+     <documentation>GetResponse carries value and TTL.</documentation>
+   </annotation>
+   <all>
+     <element name="Value" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+     <element name="TTL" type="xsd:duration" minOccurs="0" maxOccurs="1"/>
+    </all>
+  </complexType>
+
+  <complexType name="GetMultiRequest">
+   <sequence>
+     <element name="Keys" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+   </sequence>
+  </complexType>
+
+  <complexType name="GetMultiResponse">
+   <sequence>
+     <element name="Values" type="tns:GetResponse" minOccurs="0" maxOccurs="unbounded"/>
+   </sequence>
+  </complexType>
+</schema>

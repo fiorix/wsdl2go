@@ -1,0 +1,48 @@
+package memoryservice
+
+import (
+	"errors"
+
+	"golang.org/x/net/context"
+)
+
+// Get was auto-generated from WSDL.
+func Get(ctx context.Context, key string) (resp *GetResponse, err error) {
+	return &GetResponse{}, errors.New("not implemented")
+}
+
+// Set was auto-generated from WSDL.
+func Set(ctx context.Context, info *SetRequest) (ok bool, err error) {
+	return false, errors.New("not implemented")
+}
+
+// GetMulti was auto-generated from WSDL.
+func GetMulti(ctx context.Context, keys *GetMultiRequest) (values *GetMultiResponse, err error) {
+	return &GetMultiResponse{}, errors.New("not implemented")
+}
+
+// Duration in WSDL format.
+type Duration string
+
+// GetMultiRequest was auto-generated from WSDL.
+type GetMultiRequest struct {
+	Keys []string `xml:"Keys"`
+}
+
+// GetMultiResponse was auto-generated from WSDL.
+type GetMultiResponse struct {
+	Values []*GetResponse `xml:"Values,omitempty"`
+}
+
+// GetResponse carries value and TTL.
+type GetResponse struct {
+	Value string   `xml:"Value,omitempty"`
+	TTL   Duration `xml:"TTL,omitempty"`
+}
+
+// SetRequest carries a key-value pair.
+type SetRequest struct {
+	Key        string   `xml:"Key"`
+	Value      string   `xml:"Value"`
+	Expiration Duration `xml:"Expiration,omitempty"`
+}

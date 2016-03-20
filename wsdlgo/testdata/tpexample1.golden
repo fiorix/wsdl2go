@@ -1,0 +1,12 @@
+package hello_binding
+
+import (
+	"errors"
+
+	"golang.org/x/net/context"
+)
+
+// SayHello was auto-generated from WSDL.
+func SayHello(ctx context.Context, firstName string) (greeting string, err error) {
+	return "", errors.New("not implemented")
+}

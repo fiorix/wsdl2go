@@ -1,0 +1,46 @@
+<definitions>
+  <types>
+    <schema>
+      <import namespace="http://localhost:9999" schemaLocation="http://localhost:9999/importer-schema.wsdl"></import>
+    </schema>
+  </types>
+
+  <message name="GetRequest">
+    <part name="key" type="xsd:string"/>
+  </message>
+
+  <message name="GetResponse">
+    <part name="resp" type="tns:GetResponse"/>
+  </message>
+
+  <message name="SetRequest">
+    <part name="info" type="tns:SetRequest"/>
+  </message>
+
+  <message name="SetResponse">
+    <part name="ok" type="xsd:boolean"/>
+  </message>
+
+  <message name="GetMultiRequest">
+    <part name="keys" type="tsn:GetMultiRequest"/>
+  </message>
+
+  <message name="GetMultiResponse">
+    <part name="values" type="tsn:GetMultiResponse"/>
+  </message>
+
+  <portType name="MemoryServicePortType">
+     <operation name="Get">
+        <input message="tns:GetRequest"/>
+        <output message="tns:GetResponse"/>
+     </operation>
+     <operation name="Set">
+        <input message="tns:SetRequest"/>
+        <output message="tns:SetResponse"/>
+     </operation>
+     <operation name="GetMulti">
+        <input message="tns:GetMultiRequest"/>
+        <output message="tns:GetMultiResponse"/>
+     </operation>
+  </portType>
+</definitions>

@@ -1,0 +1,28 @@
+package endorsementsearchsoapbinding
+
+import (
+	"errors"
+
+	"golang.org/x/net/context"
+)
+
+// GetEndorsingBoarder was auto-generated from WSDL.
+func GetEndorsingBoarder(ctx context.Context, body *GetEndorsingBoarderRequest) (respBody *GetEndorsingBoarderResponse, err error) {
+	return &GetEndorsingBoarderResponse{}, errors.New("not implemented")
+}
+
+// GetEndorsingBoarderFault was auto-generated from WSDL.
+type GetEndorsingBoarderFault struct {
+	ErrorMessage string `xml:"errorMessage,omitempty"`
+}
+
+// GetEndorsingBoarderRequest was auto-generated from WSDL.
+type GetEndorsingBoarderRequest struct {
+	Manufacturer string `xml:"manufacturer,omitempty"`
+	Model        string `xml:"model,omitempty"`
+}
+
+// GetEndorsingBoarderResponse was auto-generated from WSDL.
+type GetEndorsingBoarderResponse struct {
+	EndorsingBoarder string `xml:"endorsingBoarder,omitempty"`
+}
