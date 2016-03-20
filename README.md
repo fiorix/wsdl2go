@@ -11,6 +11,9 @@ wsdl2go < file.wsdl > hello.go
 
 Use -i for remote URLs.
 
+Once the code is generated, wsdl2go invokes gofmt from $GOROOT/bin/gofmt
+and will fail have if you don't have it installed.
+
 ### Status
 
 Not fully compliant with SOAP or WSDL. Works for my needs and has been
@@ -44,6 +47,3 @@ authentication and self-signed certificates.
 For simple types that have restrictions defined, such as an enumerated
 list of possible values, we generate the validation function using reflect
 to compare values.
-
-Once the code is generated, wsdl2go invokes gofmt from $GOROOT/bin/gofmt
-and will fail have if you don't have it installed.
