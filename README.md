@@ -69,16 +69,24 @@ Types supported:
 - [x] double (float64)
 - [x] boolean (bool)
 - [x] string
+- [x] hexBinary ([]byte)
+- [x] base64Binary ([]byte)
 - [x] date
 - [x] time
 - [x] dateTime
 - [x] simpleType (w/ enum and validation)
 - [x] complexType (struct)
 - [x] complexContent (slices, embedded structs)
-- [ ] faults (TODO)
+- [ ] faults
+- [ ] decimal
+- [ ] g{Day,Month,Year}...
+- [ ] anyURI
+- [ ] QName
+- [ ] NOTATION
 
 Date types are currently defined as strings, need to implement XML
-Marshaler and Unmarshaler interfaces.
+Marshaler and Unmarshaler interfaces. The binary ones (hex and base64)
+are also lacking marshal/unmarshal.
 
 For simple types that have restrictions defined, such as an enumerated
 list of possible values, we generate the validation function using reflect

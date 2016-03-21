@@ -655,7 +655,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 	ge.writeComments(w, ct.Name, ct.Doc)
 	fmt.Fprintf(w, "type %s struct {\n", strings.Title(ct.Name))
 	if tag, exists := ge.needsNSTag[ct.Name]; exists {
-		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\"`\n", tag)
+		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\" json:\"-\"`\n", tag)
 	}
 	err := ge.genStructFields(w, ct)
 	if err != nil {

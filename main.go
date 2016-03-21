@@ -75,8 +75,8 @@ func decode(w io.Writer, src string, cli *http.Client) error {
 }
 
 func open(name string, cli *http.Client) (io.ReadCloser, error) {
-	_, err := url.Parse(name)
-	if err != nil {
+	u, err := url.Parse(name)
+	if err != nil || u.Scheme == "" {
 		return os.Open(name)
 	}
 	resp, err := cli.Get(name)
