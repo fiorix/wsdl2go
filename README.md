@@ -66,6 +66,7 @@ Types supported:
 - [x] int
 - [x] long (int64)
 - [x] float (float64)
+- [x] double (float64)
 - [x] boolean (bool)
 - [x] string
 - [x] date

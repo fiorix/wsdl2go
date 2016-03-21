@@ -414,10 +414,12 @@ func (ge *goEncoder) wsdl2goType(t, suffix string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float":
+	case "float", "double":
 		return "float64"
 	case "boolean":
 		return "bool"
+	case "hexbinary", "base64binary":
+		return "[]byte"
 	case "string":
 		return "string"
 	case "date":
@@ -473,6 +475,8 @@ func (ge *goEncoder) wsdl2goDefault(t string) string {
 		return "0"
 	case "string":
 		return `""`
+	case "[]byte":
+		return "nil"
 	default:
 		return "&" + v + "{}"
 	}
@@ -593,7 +597,7 @@ var validatorT = template.Must(template.New("validator").Parse(`
 // Validate validates {{.TypeName}}.
 func (v {{.TypeName}}) Validate() bool {
 	for _, vv := range []{{.Type}} {
-		{{range .Args}}{{.}},{{end}}
+		{{range .Args}}{{.}},{{"\n"}}{{end}}
 	}{
 		if reflect.DeepEqual(v, vv) {
 			return true
@@ -649,7 +653,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 		return nil
 	}
 	ge.writeComments(w, ct.Name, ct.Doc)
-	fmt.Fprintf(w, "type %s struct {\n", ct.Name)
+	fmt.Fprintf(w, "type %s struct {\n", strings.Title(ct.Name))
 	if tag, exists := ge.needsNSTag[ct.Name]; exists {
 		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\"`\n", tag)
 	}
