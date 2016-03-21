@@ -60,22 +60,24 @@ type goEncoder struct {
 	needsDateTimeType bool
 	needsDurationType bool
 	needsNSTag        map[string]string
-	needsPkg          map[string]bool
+	needsStdPkg       map[string]bool
+	needsExtPkg       map[string]bool
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
 func NewEncoder(w io.Writer) Encoder {
 	return &goEncoder{
-		w:          w,
-		http:       http.DefaultClient,
-		stypes:     make(map[string]*wsdl.SimpleType),
-		ctypes:     make(map[string]*wsdl.ComplexType),
-		rtypes:     make(map[string]string),
-		funcs:      make(map[string]*wsdl.Operation),
-		messages:   make(map[string]*wsdl.Message),
-		soapOps:    make(map[string]*wsdl.BindingOperation),
-		needsNSTag: make(map[string]string),
-		needsPkg:   make(map[string]bool),
+		w:           w,
+		http:        http.DefaultClient,
+		stypes:      make(map[string]*wsdl.SimpleType),
+		ctypes:      make(map[string]*wsdl.ComplexType),
+		rtypes:      make(map[string]string),
+		funcs:       make(map[string]*wsdl.Operation),
+		messages:    make(map[string]*wsdl.Message),
+		soapOps:     make(map[string]*wsdl.BindingOperation),
+		needsNSTag:  make(map[string]string),
+		needsStdPkg: make(map[string]bool),
+		needsExtPkg: make(map[string]bool),
 	}
 }
 
@@ -140,7 +142,13 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 		return err
 	}
 	fmt.Fprintf(w, "package %s\n\nimport (\n", pkg)
-	for pkg := range ge.needsPkg {
+	for pkg := range ge.needsStdPkg {
+		fmt.Fprintf(w, "%q\n", pkg)
+	}
+	if len(ge.needsStdPkg) > 0 {
+		fmt.Fprintf(w, "\n")
+	}
+	for pkg := range ge.needsExtPkg {
 		fmt.Fprintf(w, "%q\n", pkg)
 	}
 	fmt.Fprintf(w, ")\n\n")
@@ -268,8 +276,8 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 		}
 		ok := ge.writeSOAPFunc(w, op, in, out, ret)
 		if !ok {
-			ge.needsPkg["errors"] = true
-			ge.needsPkg["golang.org/x/net/context"] = true
+			ge.needsStdPkg["errors"] = true
+			ge.needsExtPkg["golang.org/x/net/context"] = true
 			in = append([]string{"ctx context.Context"}, in...)
 			ge.fixParamConflicts(in, out)
 			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn %s\n}\n\n",
@@ -305,8 +313,8 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret
 	if len(in) != 1 && len(out) != 2 {
 		return false
 	}
-	ge.needsPkg["encoding/xml"] = true
-	ge.needsPkg["github.com/fiorix/wsdl2go/soap"] = true
+	ge.needsStdPkg["encoding/xml"] = true
+	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
 	in[0] = renameParam(in[0], "α")
 	out[0] = renameParam(out[0], "β")
 	typ := strings.SplitN(out[0], " ", 2)
@@ -620,7 +628,7 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 			args[i] = v.Value
 		}
 	}
-	ge.needsPkg["reflect"] = true
+	ge.needsStdPkg["reflect"] = true
 	validatorT.Execute(w, &struct {
 		TypeName string
 		Type     string

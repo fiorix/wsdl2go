@@ -2,6 +2,7 @@ package stockquotesoapbinding
 
 import (
 	"encoding/xml"
+
 	"github.com/fiorix/wsdl2go/soap"
 )
 
@@ -24,7 +25,7 @@ func GetLastTradePrice(cli soap.RoundTripper, α *TradePriceRequest) (β *TradeP
 
 // TradePriceRequest was auto-generated from WSDL.
 type TradePriceRequest struct {
-	XMLName      xml.Name `xml:"ns:TradePriceRequest"`
+	XMLName      xml.Name `xml:"ns:TradePriceRequest" json:"-"`
 	TickerSymbol string   `xml:"tickerSymbol,omitempty"`
 }
 

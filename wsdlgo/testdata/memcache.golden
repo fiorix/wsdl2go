@@ -2,6 +2,7 @@ package memoryservice
 
 import (
 	"encoding/xml"
+
 	"github.com/fiorix/wsdl2go/soap"
 )
 
@@ -55,7 +56,7 @@ type Duration string
 
 // GetMultiRequest was auto-generated from WSDL.
 type GetMultiRequest struct {
-	XMLName xml.Name `xml:"ns:GetMultiRequest"`
+	XMLName xml.Name `xml:"ns:GetMultiRequest" json:"-"`
 	Keys    []string `xml:"Keys"`
 }
 
@@ -72,7 +73,7 @@ type GetResponse struct {
 
 // SetRequest carries a key-value pair.
 type SetRequest struct {
-	XMLName    xml.Name `xml:"ns:SetRequest"`
+	XMLName    xml.Name `xml:"ns:SetRequest" json:"-"`
 	Key        string   `xml:"Key"`
 	Value      string   `xml:"Value"`
 	Expiration Duration `xml:"Expiration,omitempty"`

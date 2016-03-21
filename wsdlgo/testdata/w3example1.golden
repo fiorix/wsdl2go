@@ -2,6 +2,7 @@ package endorsementsearchsoapbinding
 
 import (
 	"encoding/xml"
+
 	"github.com/fiorix/wsdl2go/soap"
 )
 
@@ -29,7 +30,7 @@ type GetEndorsingBoarderFault struct {
 
 // GetEndorsingBoarderRequest was auto-generated from WSDL.
 type GetEndorsingBoarderRequest struct {
-	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder"`
+	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder" json:"-"`
 	Manufacturer string   `xml:"manufacturer,omitempty"`
 	Model        string   `xml:"model,omitempty"`
 }
