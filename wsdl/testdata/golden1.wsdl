@@ -1,17 +1,39 @@
-<definitions>
+<definitions name="Test"
+ targetNamespace="http://localhost:9999"
+ xmlns:tns="http://localhost:9999"
+ xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:ns="http://localhost:9999"
+ xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns:MIME="http://schemas.xmlsoap.org/wsdl/mime/"
+ xmlns:DIME="http://schemas.xmlsoap.org/ws/2002/04/dime/wsdl/"
+ xmlns:WSDL="http://schemas.xmlsoap.org/wsdl/"
+ xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+<schema targetNamespace="http://localhost:9999"
+ xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:ns="http://localhost:9999"
+ xmlns="http://www.w3.org/2001/XMLSchema">
+
+</schema>
 
 <message name="getTermRequest">
-  <part name="term" type="xs:string"/>
+  <part name="term" type="xsd:string"/>
 </message>
 
 <message name="getTermResponse">
-  <part name="value" type="xs:string"/>
+  <part name="value" type="xsd:string"/>
 </message>
 
 <portType name="glossaryTerms">
   <operation name="getTerm">
-    <input message="getTermRequest"/>
-    <output message="getTermResponse"/>
+    <input message="tns:getTermRequest"/>
+    <output message="tns:getTermResponse"/>
   </operation>
 </portType>
 

@@ -1,4 +1,4 @@
-<!-- my hacked up memcache++ -->
+<!-- my hacked up memcache++ for testing only -->
 
 <definitions name="MemoryService"
    targetNamespace="http://localhost:8080/EchoService.wsdl"
@@ -63,11 +63,11 @@
    </message>
 
    <message name="GetMultiRequest">
-     <part name="keys" type="tsn:GetMultiRequest"/>
+     <part name="keys" type="tns:GetMultiRequest"/>
    </message>
 
    <message name="GetMultiResponse">
-     <part name="values" type="tsn:GetMultiResponse"/>
+     <part name="values" type="tns:GetMultiResponse"/>
    </message>
 
    <portType name="MemoryServicePortType">
@@ -89,6 +89,22 @@
       <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
       <operation name="Get">
          <soap:operation soapAction="Get"/>
+         <input>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </input>
+         <output>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </output>
+      </operation>
+
+      <operation name="GetMulti">
+         <soap:operation soapAction="GetMulti"/>
          <input>
             <soap:body
                encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"

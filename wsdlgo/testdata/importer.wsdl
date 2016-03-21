@@ -1,5 +1,3 @@
-<!-- my hacked up memcache++ -->
-
 <definitions name="MemoryService"
    targetNamespace="http://localhost:8080/EchoService.wsdl"
    xmlns="http://schemas.xmlsoap.org/wsdl/"
@@ -13,6 +11,22 @@
       <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
       <operation name="Get">
          <soap:operation soapAction="Get"/>
+         <input>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </input>
+         <output>
+            <soap:body
+               encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+               namespace="urn:examples:memoryservice"
+               use="encoded"/>
+         </output>
+      </operation>
+
+      <operation name="GetMulti">
+         <soap:operation soapAction="GetMulti"/>
          <input>
             <soap:body
                encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"

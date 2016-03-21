@@ -24,20 +24,20 @@ func TestUnmarshal(t *testing.T) {
 	for i, tc := range cases {
 		f, err := os.Open(filepath.Join("testdata", tc.F))
 		if err != nil {
-			t.Errorf("test %d failed: %v", i, err)
+			t.Errorf("test %d (%q) failed: %v", i, tc.F, err)
 		}
 		defer f.Close()
 		_, err = Unmarshal(f)
 		if tc.E == nil {
 			if err != nil {
-				t.Errorf("test %d failed: want %v, have %v", i, tc.E, err)
+				t.Errorf("test %d (%q) failed: want %v, have %v", i, tc.F, tc.E, err)
 			}
 			continue
 		}
 		want := reflect.ValueOf(tc.E).Type().Name()
 		have := reflect.ValueOf(err).Type().Name()
 		if want != have {
-			t.Errorf("test %d failed: want %q, have %q", i, want, have)
+			t.Errorf("test %d (%q) failed: want %q, have %q", i, tc.F, want, have)
 		}
 	}
 }

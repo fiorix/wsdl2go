@@ -22,11 +22,11 @@
   </message>
 
   <message name="GetMultiRequest">
-    <part name="keys" type="tsn:GetMultiRequest"/>
+    <part name="keys" type="tns:GetMultiRequest"/>
   </message>
 
   <message name="GetMultiResponse">
-    <part name="values" type="tsn:GetMultiResponse"/>
+    <part name="values" type="tns:GetMultiResponse"/>
   </message>
 
   <portType name="MemoryServicePortType">

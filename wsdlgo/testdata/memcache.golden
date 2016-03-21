@@ -1,24 +1,53 @@
 package memoryservice
 
 import (
-	"errors"
-
-	"golang.org/x/net/context"
+	"encoding/xml"
+	"github.com/fiorix/wsdl2go/soap"
 )
 
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://localhost:8080/EchoService.wsdl"
+
 // Get was auto-generated from WSDL.
-func Get(ctx context.Context, key string) (resp *GetResponse, err error) {
-	return &GetResponse{}, errors.New("not implemented")
+func Get(cli soap.RoundTripper, α string) (β *GetResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetResponse `xml:"GetResponse"`
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return &GetResponse{}, err
+	}
+	return &γ.Body.M, nil
 }
 
 // Set was auto-generated from WSDL.
-func Set(ctx context.Context, info *SetRequest) (ok bool, err error) {
-	return false, errors.New("not implemented")
+func Set(cli soap.RoundTripper, α *SetRequest) (β bool, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M bool `xml:"bool"`
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return false, err
+	}
+	return γ.Body.M, nil
 }
 
 // GetMulti was auto-generated from WSDL.
-func GetMulti(ctx context.Context, keys *GetMultiRequest) (values *GetMultiResponse, err error) {
-	return &GetMultiResponse{}, errors.New("not implemented")
+func GetMulti(cli soap.RoundTripper, α *GetMultiRequest) (β *GetMultiResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetMultiResponse `xml:"GetMultiResponse"`
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return &GetMultiResponse{}, err
+	}
+	return &γ.Body.M, nil
 }
 
 // Duration in WSDL format.
@@ -26,7 +55,8 @@ type Duration string
 
 // GetMultiRequest was auto-generated from WSDL.
 type GetMultiRequest struct {
-	Keys []string `xml:"Keys"`
+	XMLName xml.Name `xml:"ns:GetMultiRequest"`
+	Keys    []string `xml:"Keys"`
 }
 
 // GetMultiResponse was auto-generated from WSDL.
@@ -42,6 +72,7 @@ type GetResponse struct {
 
 // SetRequest carries a key-value pair.
 type SetRequest struct {
+	XMLName    xml.Name `xml:"ns:SetRequest"`
 	Key        string   `xml:"Key"`
 	Value      string   `xml:"Value"`
 	Expiration Duration `xml:"Expiration,omitempty"`

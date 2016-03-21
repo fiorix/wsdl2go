@@ -1,19 +1,31 @@
 package stockquotesoapbinding
 
 import (
-	"errors"
-
-	"golang.org/x/net/context"
+	"encoding/xml"
+	"github.com/fiorix/wsdl2go/soap"
 )
 
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://example.com/stockquote.wsdl"
+
 // GetLastTradePrice was auto-generated from WSDL.
-func GetLastTradePrice(ctx context.Context, body *TradePriceRequest) (respBody *TradePriceResponse, err error) {
-	return &TradePriceResponse{}, errors.New("not implemented")
+func GetLastTradePrice(cli soap.RoundTripper, α *TradePriceRequest) (β *TradePriceResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M TradePriceResponse `xml:"TradePriceResponse"`
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return &TradePriceResponse{}, err
+	}
+	return &γ.Body.M, nil
 }
 
 // TradePriceRequest was auto-generated from WSDL.
 type TradePriceRequest struct {
-	TickerSymbol string `xml:"tickerSymbol,omitempty"`
+	XMLName      xml.Name `xml:"ns:TradePriceRequest"`
+	TickerSymbol string   `xml:"tickerSymbol,omitempty"`
 }
 
 // TradePriceResponse was auto-generated from WSDL.

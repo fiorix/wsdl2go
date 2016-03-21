@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/fiorix/wsdl2go/wsdl"
 )
@@ -42,6 +43,7 @@ type goEncoder struct {
 	// types cache
 	stypes map[string]*wsdl.SimpleType
 	ctypes map[string]*wsdl.ComplexType
+	rtypes map[string]string // renamed ctypes old->new
 
 	// funcs cache
 	funcs map[string]*wsdl.Operation
@@ -49,23 +51,31 @@ type goEncoder struct {
 	// messages cache
 	messages map[string]*wsdl.Message
 
+	// soap operations cache
+	soapOps map[string]*wsdl.BindingOperation
+
 	// whether to add supporting types
-	needsReflect      bool
 	needsDateType     bool
 	needsTimeType     bool
 	needsDateTimeType bool
 	needsDurationType bool
+	needsNSTag        map[string]string
+	needsPkg          map[string]bool
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
 func NewEncoder(w io.Writer) Encoder {
 	return &goEncoder{
-		w:        w,
-		http:     http.DefaultClient,
-		stypes:   make(map[string]*wsdl.SimpleType),
-		ctypes:   make(map[string]*wsdl.ComplexType),
-		funcs:    make(map[string]*wsdl.Operation),
-		messages: make(map[string]*wsdl.Message),
+		w:          w,
+		http:       http.DefaultClient,
+		stypes:     make(map[string]*wsdl.SimpleType),
+		ctypes:     make(map[string]*wsdl.ComplexType),
+		rtypes:     make(map[string]string),
+		funcs:      make(map[string]*wsdl.Operation),
+		messages:   make(map[string]*wsdl.Message),
+		soapOps:    make(map[string]*wsdl.BindingOperation),
+		needsNSTag: make(map[string]string),
+		needsPkg:   make(map[string]bool),
 	}
 }
 
@@ -115,6 +125,7 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	ge.cacheTypes(d)
 	ge.cacheFuncs(d)
 	ge.cacheMessages(d)
+	ge.cacheSOAPOperations(d)
 	pkg := strings.ToLower(d.Binding.Name)
 	if pkg == "" {
 		pkg = "internal"
@@ -128,11 +139,15 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(w, "package %s\n\nimport (\n\"errors\"\n", pkg)
-	if ge.needsReflect {
-		fmt.Fprintf(w, "\"reflect\"\n")
+	fmt.Fprintf(w, "package %s\n\nimport (\n", pkg)
+	for pkg := range ge.needsPkg {
+		fmt.Fprintf(w, "%q\n", pkg)
 	}
-	fmt.Fprintf(w, "\n\"golang.org/x/net/context\"\n)\n\n")
+	fmt.Fprintf(w, ")\n\n")
+	if d.TargetNamespace != "" {
+		ge.writeComments(w, "Namespace", "")
+		fmt.Fprintf(w, "var Namespace = %q\n\n", d.TargetNamespace)
+	}
 	_, err = io.Copy(w, &b)
 	return err
 }
@@ -213,6 +228,12 @@ func (ge *goEncoder) cacheMessages(d *wsdl.Definitions) {
 	}
 }
 
+func (ge *goEncoder) cacheSOAPOperations(d *wsdl.Definitions) {
+	for _, v := range d.Binding.Operations {
+		ge.soapOps[v.Name] = v
+	}
+}
+
 // writeGoFuncs writes Go function definitions from WSDL types to w.
 // Functions are written in the same order of the WSDL document.
 func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
@@ -245,30 +266,90 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 				ret[i] = ge.wsdl2goDefault(parts[1])
 			}
 		}
-		ge.fixParamConflicts(in, out)
-		fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn %s\n}\n\n",
-			strings.Title(op.Name),
-			strings.Join(in, ","),
-			strings.Join(out, ","),
-			strings.Join(ret, ","),
-		)
+		ok := ge.writeSOAPFunc(w, op, in, out, ret)
+		if !ok {
+			ge.needsPkg["errors"] = true
+			ge.needsPkg["golang.org/x/net/context"] = true
+			in = append([]string{"ctx context.Context"}, in...)
+			ge.fixParamConflicts(in, out)
+			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn %s\n}\n\n",
+				strings.Title(op.Name),
+				strings.Join(in, ","),
+				strings.Join(out, ","),
+				strings.Join(ret, ","),
+			)
+		}
 	}
 	return nil
 }
 
+var soapFuncT = template.Must(template.New("soapFunc").
+	Parse(`func {{.Name}}(cli soap.RoundTripper, {{.Input}}) ({{.Output}}) {
+	γ := struct {
+		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
+		Body    struct {
+			M {{.OutputType}} ` + "`xml:\"{{.OutputType}}\"`" + `
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return {{.RetDef}}, err
+	}
+	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
+}
+`))
+
+func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret []string) bool {
+	if _, exists := ge.soapOps[op.Name]; !exists {
+		return false
+	}
+	if len(in) != 1 && len(out) != 2 {
+		return false
+	}
+	ge.needsPkg["encoding/xml"] = true
+	ge.needsPkg["github.com/fiorix/wsdl2go/soap"] = true
+	in[0] = renameParam(in[0], "α")
+	out[0] = renameParam(out[0], "β")
+	typ := strings.SplitN(out[0], " ", 2)
+	soapFuncT.Execute(w, &struct {
+		Name       string
+		Input      string
+		Output     string
+		OutputType string
+		RetPtr     bool
+		RetDef     string
+	}{
+		strings.Title(op.Name),
+		strings.Join(in, ","),
+		strings.Join(out, ","),
+		strings.TrimPrefix(typ[1], "*"),
+		typ[1][0] == '*',
+		ret[0],
+	})
+	return true
+}
+
+func renameParam(p, name string) string {
+	v := strings.SplitN(p, " ", 2)
+	if len(v) != 2 {
+		return p
+	}
+	return name + " " + v[1]
+}
+
+// returns list of function input parameters.
 func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]string, error) {
-	in := []string{"ctx context.Context"}
 	if op.Input == nil {
-		return in, nil
+		return []string{}, nil
 	}
 	im := ge.trimns(op.Input.Message)
 	req, ok := ge.messages[im]
 	if !ok {
 		return nil, fmt.Errorf("operation %q wants input message %q but it's not defined", op.Name, im)
 	}
-	return append(in, ge.genParams(req, "Request")...), nil
+	return ge.genParams(req, "Request"), nil
 }
 
+// returns list of function output parameters plus error.
 func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]string, error) {
 	out := []string{"err error"}
 	if op.Output == nil {
@@ -352,14 +433,26 @@ func (ge *goEncoder) wsdl2goType(t, suffix string) string {
 		ge.needsDurationType = true
 		return "Duration"
 	default:
-		if suffix != "" && !strings.HasSuffix(t, suffix) {
-			ge.renameType(t, t+suffix)
-			t = v + suffix
+		if newname, exists := ge.rtypes[t]; exists {
+			t = newname
+		} else if suffix != "" {
+			// These types are parameters to functions. Since
+			// they are structs, we set their names to have
+			// suffixes Request and Response based on how
+			// they're used.
+			if strings.HasSuffix(t, suffix) {
+				t = v
+			} else {
+				ge.renameType(t, t+suffix)
+				t = v + suffix
+			}
+			// Request types need a special xml tag to enable
+			// encoding them correct. Responses cannot have it.
+			if suffix == "Request" {
+				ge.needsNSTag[t] = v
+			}
 		} else {
 			t = v
-		}
-		if len(t) == 0 {
-			return "FIXME"
 		}
 		return "*" + strings.Title(t)
 	}
@@ -402,6 +495,7 @@ func (ge *goEncoder) renameType(old, name string) {
 		if !exists {
 			return
 		}
+		ge.rtypes[old] = name
 		name = ge.trimns(name)
 	}
 	ct.Name = name
@@ -421,7 +515,7 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 			continue
 		}
 		ge.writeComments(&b, st.Name, "")
-		fmt.Fprintf(w, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base, ""))
+		fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base, ""))
 		ge.genValidator(&b, st.Name, st.Restriction)
 	}
 	var err error
@@ -495,6 +589,20 @@ func (ge *goEncoder) genDateTypes(w io.Writer) {
 	}
 }
 
+var validatorT = template.Must(template.New("validator").Parse(`
+// Validate validates {{.TypeName}}.
+func (v {{.TypeName}}) Validate() bool {
+	for _, vv := range []{{.Type}} {
+		{{range .Args}}{{.}},{{end}}
+	}{
+		if reflect.DeepEqual(v, vv) {
+			return true
+		}
+	}
+	return false
+}
+`))
+
 func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restriction) {
 	if len(r.Enum) == 0 {
 		return
@@ -508,14 +616,16 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 			args[i] = v.Value
 		}
 	}
-	fmt.Fprintf(w, "// Validate validates the %s.", typeName)
-	fmt.Fprintf(w, "\nfunc (v %s) Validate() bool {\n", typeName)
-	fmt.Fprintf(w, "for _, vv := range []%s{\n", t)
-	fmt.Fprintf(w, "%s,\n", strings.Join(args, ",\n"))
-	fmt.Fprintf(w, "}{\nif reflect.DeepEqual(v, vv) { return true }\n}\nreturn false\n}\n\n")
-	if !ge.needsReflect {
-		ge.needsReflect = true
-	}
+	ge.needsPkg["reflect"] = true
+	validatorT.Execute(w, &struct {
+		TypeName string
+		Type     string
+		Args     []string
+	}{
+		typeName,
+		t,
+		args,
+	})
 }
 
 func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
@@ -540,6 +650,9 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 	}
 	ge.writeComments(w, ct.Name, ct.Doc)
 	fmt.Fprintf(w, "type %s struct {\n", ct.Name)
+	if tag, exists := ge.needsNSTag[ct.Name]; exists {
+		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\"`\n", tag)
+	}
 	err := ge.genStructFields(w, ct)
 	if err != nil {
 		return err
@@ -600,20 +713,26 @@ func (ge *goEncoder) genElements(w io.Writer, ct *wsdl.ComplexType) error {
 }
 
 func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
+	var slicetype string
 	if el.Type == "" && el.ComplexType != nil {
 		seq := el.ComplexType.Sequence
 		if seq != nil && len(seq.Elements) == 1 {
 			n := el.Name
 			el = el.ComplexType.Sequence.Elements[0]
+			slicetype = el.Name
 			el.Name = n
 		}
 	}
+	tag := el.Name
 	fmt.Fprintf(w, "%s ", strings.Title(el.Name))
 	if el.Max != "" && el.Max != "1" {
 		fmt.Fprintf(w, "[]")
+		if slicetype != "" {
+			tag = el.Name + ">" + slicetype
+		}
 	}
-	fmt.Fprint(w, ge.wsdl2goType(el.Type, ""))
-	fmt.Fprintf(w, " `xml:\"%s", el.Name)
+	typ := ge.wsdl2goType(el.Type, "")
+	fmt.Fprintf(w, "%s `xml:\"%s", typ, tag)
 	if el.Nillable || el.Min == 0 {
 		fmt.Fprintf(w, ",omitempty")
 	}

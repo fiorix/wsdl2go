@@ -1,14 +1,25 @@
 package endorsementsearchsoapbinding
 
 import (
-	"errors"
-
-	"golang.org/x/net/context"
+	"encoding/xml"
+	"github.com/fiorix/wsdl2go/soap"
 )
 
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://namespaces.snowboard-info.com"
+
 // GetEndorsingBoarder was auto-generated from WSDL.
-func GetEndorsingBoarder(ctx context.Context, body *GetEndorsingBoarderRequest) (respBody *GetEndorsingBoarderResponse, err error) {
-	return &GetEndorsingBoarderResponse{}, errors.New("not implemented")
+func GetEndorsingBoarder(cli soap.RoundTripper, α *GetEndorsingBoarderRequest) (β *GetEndorsingBoarderResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse"`
+		}
+	}{}
+	if err = cli.RoundTrip(α, &γ); err != nil {
+		return &GetEndorsingBoarderResponse{}, err
+	}
+	return &γ.Body.M, nil
 }
 
 // GetEndorsingBoarderFault was auto-generated from WSDL.
@@ -18,8 +29,9 @@ type GetEndorsingBoarderFault struct {
 
 // GetEndorsingBoarderRequest was auto-generated from WSDL.
 type GetEndorsingBoarderRequest struct {
-	Manufacturer string `xml:"manufacturer,omitempty"`
-	Model        string `xml:"model,omitempty"`
+	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder"`
+	Manufacturer string   `xml:"manufacturer,omitempty"`
+	Model        string   `xml:"model,omitempty"`
 }
 
 // GetEndorsingBoarderResponse was auto-generated from WSDL.

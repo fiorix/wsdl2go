@@ -9,6 +9,8 @@ type Definitions struct {
 	XMLName         xml.Name   `xml:"definitions"`
 	Name            string     `xml:"name,attr"`
 	TargetNamespace string     `xml:"targetNamespace,attr"`
+	SOAPEnv         string     `xml:"SOAP-ENV,attr"`
+	SOAPEnc         string     `xml:"SOAP-ENC,attr"`
 	Service         Service    `xml:"service"`
 	Imports         []*Import  `xml:"import"`
 	Schema          Schema     `xml:"types>schema"`
@@ -39,14 +41,11 @@ type Address struct {
 
 // Schema of WSDL document.
 type Schema struct {
-	XMLName              xml.Name        `xml:"schema"`
-	TargetNamespace      string          `xml:"targetNamespace,attr"`
-	ElementFormDefault   string          `xml:"elementFormDefault,attr"`
-	AttributeFormDefault string          `xml:"attributeFormDefault,attr"`
-	Imports              []*ImportSchema `xml:"import"`
-	SimpleTypes          []*SimpleType   `xml:"simpleType"`
-	ComplexTypes         []*ComplexType  `xml:"complexType"`
-	Elements             []*Element      `xml:"element"`
+	XMLName      xml.Name        `xml:"schema"`
+	Imports      []*ImportSchema `xml:"import"`
+	SimpleTypes  []*SimpleType   `xml:"simpleType"`
+	ComplexTypes []*ComplexType  `xml:"complexType"`
+	Elements     []*Element      `xml:"element"`
 }
 
 // SimpleType describes a simple type, such as string.
