@@ -666,7 +666,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 	ge.writeComments(w, ct.Name, ct.Doc)
 	fmt.Fprintf(w, "type %s struct {\n", strings.Title(ct.Name))
 	if tag, exists := ge.needsNSTag[ct.Name]; exists {
-		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\" json:\"-\"`\n", tag)
+		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\" json:\"-\" yaml:\"-\"`\n", tag)
 	}
 	err := ge.genStructFields(w, ct)
 	if err != nil {
@@ -747,11 +747,11 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		}
 	}
 	typ := ge.wsdl2goType(el.Type, "")
-	fmt.Fprintf(w, "%s `xml:\"%s", typ, tag)
 	if el.Nillable || el.Min == 0 {
-		fmt.Fprintf(w, ",omitempty")
+		tag += ",omitempty"
 	}
-	fmt.Fprintf(w, "\"`\n")
+	fmt.Fprintf(w, "%s `xml:\"%s\" json:\"%s\" yaml:\"%s\"`\n",
+		typ, tag, tag, tag)
 }
 
 // writeComments writes comments to w, capped at ~80 columns.

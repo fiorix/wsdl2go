@@ -18,7 +18,7 @@ func Get(cli soap.RoundTripper, α string) (β *GetResponse, err error) {
 		}
 	}{}
 	if err = cli.RoundTrip(α, &γ); err != nil {
-		return &GetResponse{}, err
+		return nil, err
 	}
 	return &γ.Body.M, nil
 }
@@ -46,7 +46,7 @@ func GetMulti(cli soap.RoundTripper, α *GetMultiRequest) (β *GetMultiResponse,
 		}
 	}{}
 	if err = cli.RoundTrip(α, &γ); err != nil {
-		return &GetMultiResponse{}, err
+		return nil, err
 	}
 	return &γ.Body.M, nil
 }
@@ -56,25 +56,25 @@ type Duration string
 
 // GetMultiRequest was auto-generated from WSDL.
 type GetMultiRequest struct {
-	XMLName xml.Name `xml:"ns:GetMultiRequest" json:"-"`
-	Keys    []string `xml:"Keys"`
+	XMLName xml.Name `xml:"ns:GetMultiRequest" json:"-" yaml:"-"`
+	Keys    []string `xml:"Keys" json:"Keys" yaml:"Keys"`
 }
 
 // GetMultiResponse was auto-generated from WSDL.
 type GetMultiResponse struct {
-	Values []*GetResponse `xml:"Values,omitempty"`
+	Values []*GetResponse `xml:"Values,omitempty" json:"Values,omitempty" yaml:"Values,omitempty"`
 }
 
 // GetResponse carries value and TTL.
 type GetResponse struct {
-	Value string   `xml:"Value,omitempty"`
-	TTL   Duration `xml:"TTL,omitempty"`
+	Value string   `xml:"Value,omitempty" json:"Value,omitempty" yaml:"Value,omitempty"`
+	TTL   Duration `xml:"TTL,omitempty" json:"TTL,omitempty" yaml:"TTL,omitempty"`
 }
 
 // SetRequest carries a key-value pair.
 type SetRequest struct {
-	XMLName    xml.Name `xml:"ns:SetRequest" json:"-"`
-	Key        string   `xml:"Key"`
-	Value      string   `xml:"Value"`
-	Expiration Duration `xml:"Expiration,omitempty"`
+	XMLName    xml.Name `xml:"ns:SetRequest" json:"-" yaml:"-"`
+	Key        string   `xml:"Key" json:"Key" yaml:"Key"`
+	Value      string   `xml:"Value" json:"Value" yaml:"Value"`
+	Expiration Duration `xml:"Expiration,omitempty" json:"Expiration,omitempty" yaml:"Expiration,omitempty"`
 }

@@ -18,18 +18,18 @@ func GetLastTradePrice(cli soap.RoundTripper, α *TradePriceRequest) (β *TradeP
 		}
 	}{}
 	if err = cli.RoundTrip(α, &γ); err != nil {
-		return &TradePriceResponse{}, err
+		return nil, err
 	}
 	return &γ.Body.M, nil
 }
 
 // TradePriceRequest was auto-generated from WSDL.
 type TradePriceRequest struct {
-	XMLName      xml.Name `xml:"ns:TradePriceRequest" json:"-"`
-	TickerSymbol string   `xml:"tickerSymbol,omitempty"`
+	XMLName      xml.Name `xml:"ns:TradePriceRequest" json:"-" yaml:"-"`
+	TickerSymbol string   `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
 }
 
 // TradePriceResponse was auto-generated from WSDL.
 type TradePriceResponse struct {
-	Price float64 `xml:"price,omitempty"`
+	Price float64 `xml:"price,omitempty" json:"price,omitempty" yaml:"price,omitempty"`
 }

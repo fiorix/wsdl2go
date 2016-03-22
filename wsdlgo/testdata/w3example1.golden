@@ -18,24 +18,24 @@ func GetEndorsingBoarder(cli soap.RoundTripper, α *GetEndorsingBoarderRequest) 
 		}
 	}{}
 	if err = cli.RoundTrip(α, &γ); err != nil {
-		return &GetEndorsingBoarderResponse{}, err
+		return nil, err
 	}
 	return &γ.Body.M, nil
 }
 
 // GetEndorsingBoarderFault was auto-generated from WSDL.
 type GetEndorsingBoarderFault struct {
-	ErrorMessage string `xml:"errorMessage,omitempty"`
+	ErrorMessage string `xml:"errorMessage,omitempty" json:"errorMessage,omitempty" yaml:"errorMessage,omitempty"`
 }
 
 // GetEndorsingBoarderRequest was auto-generated from WSDL.
 type GetEndorsingBoarderRequest struct {
-	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder" json:"-"`
-	Manufacturer string   `xml:"manufacturer,omitempty"`
-	Model        string   `xml:"model,omitempty"`
+	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder" json:"-" yaml:"-"`
+	Manufacturer string   `xml:"manufacturer,omitempty" json:"manufacturer,omitempty" yaml:"manufacturer,omitempty"`
+	Model        string   `xml:"model,omitempty" json:"model,omitempty" yaml:"model,omitempty"`
 }
 
 // GetEndorsingBoarderResponse was auto-generated from WSDL.
 type GetEndorsingBoarderResponse struct {
-	EndorsingBoarder string `xml:"endorsingBoarder,omitempty"`
+	EndorsingBoarder string `xml:"endorsingBoarder,omitempty" json:"endorsingBoarder,omitempty" yaml:"endorsingBoarder,omitempty"`
 }
