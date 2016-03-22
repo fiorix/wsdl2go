@@ -318,6 +318,9 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret
 	in[0] = renameParam(in[0], "α")
 	out[0] = renameParam(out[0], "β")
 	typ := strings.SplitN(out[0], " ", 2)
+	if strings.HasPrefix(ret[0], "&") {
+		ret[0] = "nil"
+	}
 	soapFuncT.Execute(w, &struct {
 		Name       string
 		Input      string
