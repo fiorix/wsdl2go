@@ -1,11 +1,11 @@
 <!-- my hacked up memcache++ for testing only -->
 
 <definitions name="MemoryService"
-   targetNamespace="http://localhost:8080/EchoService.wsdl"
+   targetNamespace="http://localhost:8080/MemoryService.wsdl"
    xmlns="http://schemas.xmlsoap.org/wsdl/"
    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-   xmlns:tns="http://localhost:8080/EchoService.wsdl"
+   xmlns:tns="http://localhost:8080/MemoryService.wsdl"
 
    <types>
      <schema>

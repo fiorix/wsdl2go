@@ -9,30 +9,40 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://namespaces.snowboard-info.com"
 
+// GetEndorsingBoarderPortType was auto-generated from WSDL.
+type GetEndorsingBoarderPortType struct {
+	cli *soap.Client
+}
+
+// NewGetEndorsingBoarderPortType creates an initializes a GetEndorsingBoarderPortType.
+func NewGetEndorsingBoarderPortType(cli *soap.Client) *GetEndorsingBoarderPortType {
+	return &GetEndorsingBoarderPortType{cli}
+}
+
 // GetEndorsingBoarder was auto-generated from WSDL.
-func GetEndorsingBoarder(cli soap.RoundTripper, α *GetEndorsingBoarderRequest) (β *GetEndorsingBoarderResponse, err error) {
+func (p *GetEndorsingBoarderPortType) GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error) {
 	γ := struct {
 		XMLName xml.Name `xml:"Envelope"`
 		Body    struct {
 			M GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse"`
 		}
 	}{}
-	if err = cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
 }
 
+// GetEndorsingBoarder was auto-generated from WSDL.
+type GetEndorsingBoarder struct {
+	XMLName      xml.Name `xml:"http://namespaces.snowboard-info.com GetEndorsingBoarder" json:"-" yaml:"-"`
+	Manufacturer string   `xml:"manufacturer,omitempty" json:"manufacturer,omitempty" yaml:"manufacturer,omitempty"`
+	Model        string   `xml:"model,omitempty" json:"model,omitempty" yaml:"model,omitempty"`
+}
+
 // GetEndorsingBoarderFault was auto-generated from WSDL.
 type GetEndorsingBoarderFault struct {
 	ErrorMessage string `xml:"errorMessage,omitempty" json:"errorMessage,omitempty" yaml:"errorMessage,omitempty"`
-}
-
-// GetEndorsingBoarderRequest was auto-generated from WSDL.
-type GetEndorsingBoarderRequest struct {
-	XMLName      xml.Name `xml:"ns:GetEndorsingBoarder" json:"-" yaml:"-"`
-	Manufacturer string   `xml:"manufacturer,omitempty" json:"manufacturer,omitempty" yaml:"manufacturer,omitempty"`
-	Model        string   `xml:"model,omitempty" json:"model,omitempty" yaml:"model,omitempty"`
 }
 
 // GetEndorsingBoarderResponse was auto-generated from WSDL.

@@ -43,7 +43,6 @@ type goEncoder struct {
 	// types cache
 	stypes map[string]*wsdl.SimpleType
 	ctypes map[string]*wsdl.ComplexType
-	rtypes map[string]string // renamed ctypes old->new
 
 	// funcs cache
 	funcs map[string]*wsdl.Operation
@@ -59,7 +58,7 @@ type goEncoder struct {
 	needsTimeType     bool
 	needsDateTimeType bool
 	needsDurationType bool
-	needsNSTag        map[string]string
+	needsTag          map[string]bool
 	needsStdPkg       map[string]bool
 	needsExtPkg       map[string]bool
 }
@@ -71,11 +70,10 @@ func NewEncoder(w io.Writer) Encoder {
 		http:        http.DefaultClient,
 		stypes:      make(map[string]*wsdl.SimpleType),
 		ctypes:      make(map[string]*wsdl.ComplexType),
-		rtypes:      make(map[string]string),
 		funcs:       make(map[string]*wsdl.Operation),
 		messages:    make(map[string]*wsdl.Message),
 		soapOps:     make(map[string]*wsdl.BindingOperation),
-		needsNSTag:  make(map[string]string),
+		needsTag:    make(map[string]bool),
 		needsStdPkg: make(map[string]bool),
 		needsExtPkg: make(map[string]bool),
 	}
@@ -133,6 +131,10 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 		pkg = "internal"
 	}
 	var b bytes.Buffer
+	if len(ge.soapOps) > 0 {
+		// TODO: rpc? meh.
+		ge.writePortType(&b, d)
+	}
 	err = ge.writeGoFuncs(&b, d) // functions first, for clarity
 	if err != nil {
 		return err
@@ -242,6 +244,25 @@ func (ge *goEncoder) cacheSOAPOperations(d *wsdl.Definitions) {
 	}
 }
 
+var portTypeT = template.Must(template.New("portType").Parse(`
+// {{.}} was auto-generated from WSDL.
+type {{.}} struct {
+	cli *soap.Client
+}
+
+// New{{.}} creates an initializes a {{.}}.
+func New{{.}}(cli *soap.Client) *{{.}} {
+	return &{{.}}{cli}
+}
+`))
+
+func (ge *goEncoder) writePortType(w io.Writer, d *wsdl.Definitions) error {
+	if d.PortType.Operations == nil || len(d.PortType.Operations) == 0 {
+		return nil
+	}
+	return portTypeT.Execute(w, strings.Title(d.PortType.Name))
+}
+
 // writeGoFuncs writes Go function definitions from WSDL types to w.
 // Functions are written in the same order of the WSDL document.
 func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
@@ -257,7 +278,6 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 		return nil
 	}
 	for _, op := range d.PortType.Operations {
-		// TODO: really rename input to have Request suffix?
 		ge.writeComments(w, op.Name, op.Doc)
 		in, err := ge.inputParams(op)
 		if err != nil {
@@ -274,7 +294,7 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 				ret[i] = ge.wsdl2goDefault(parts[1])
 			}
 		}
-		ok := ge.writeSOAPFunc(w, op, in, out, ret)
+		ok := ge.writeSOAPFunc(w, d, op, in, out, ret)
 		if !ok {
 			ge.needsStdPkg["errors"] = true
 			ge.needsExtPkg["golang.org/x/net/context"] = true
@@ -291,22 +311,22 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 	return nil
 }
 
-var soapFuncT = template.Must(template.New("soapFunc").
-	Parse(`func {{.Name}}(cli soap.RoundTripper, {{.Input}}) ({{.Output}}) {
+var soapFuncT = template.Must(template.New("soapFunc").Parse(
+	`func (p *{{.PortType}}) {{.Name}}({{.Input}}) ({{.Output}}) {
 	γ := struct {
 		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
 		Body    struct {
 			M {{.OutputType}} ` + "`xml:\"{{.OutputType}}\"`" + `
 		}
 	}{}
-	if err = cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
 		return {{.RetDef}}, err
 	}
 	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
 }
 `))
 
-func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret []string) bool {
+func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, in, out, ret []string) bool {
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
@@ -322,6 +342,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret
 		ret[0] = "nil"
 	}
 	soapFuncT.Execute(w, &struct {
+		PortType   string
 		Name       string
 		Input      string
 		Output     string
@@ -329,6 +350,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, op *wsdl.Operation, in, out, ret
 		RetPtr     bool
 		RetDef     string
 	}{
+		strings.Title(d.PortType.Name),
 		strings.Title(op.Name),
 		strings.Join(in, ","),
 		strings.Join(out, ","),
@@ -357,7 +379,7 @@ func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]string, error) {
 	if !ok {
 		return nil, fmt.Errorf("operation %q wants input message %q but it's not defined", op.Name, im)
 	}
-	return ge.genParams(req, "Request"), nil
+	return ge.genParams(req, true), nil
 }
 
 // returns list of function output parameters plus error.
@@ -371,20 +393,23 @@ func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]string, error) {
 	if !ok {
 		return nil, fmt.Errorf("operation %q wants output message %q but it's not defined", op.Name, om)
 	}
-	return append(ge.genParams(resp, "Response"), out[0]), nil
+	return append(ge.genParams(resp, false), out[0]), nil
 }
 
-func (ge *goEncoder) genParams(m *wsdl.Message, suffix string) []string {
+func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []string {
 	params := make([]string, len(m.Parts))
 	for i, param := range m.Parts {
 		var t string
 		switch {
 		case param.Type != "":
-			t = ge.wsdl2goType(param.Type, suffix)
+			t = ge.wsdl2goType(param.Type)
 		case param.Element != "":
-			t = ge.wsdl2goType(param.Element, suffix)
+			t = ge.wsdl2goType(param.Element)
 		}
 		params[i] = param.Name + " " + t
+		if needsTag {
+			ge.needsTag[strings.TrimPrefix(t, "*")] = true
+		}
 	}
 	return params
 }
@@ -408,13 +433,8 @@ func (ge *goEncoder) fixParamConflicts(req, resp []string) {
 	}
 }
 
-// Converts types from wsdl type to Go type. If t is a complex type
-// (a struct, as opposed to int or string) and a suffix is provided,
-// we look for the suffix in its name and add if needed. When we do
-// that, we also update the list of cached ctypes to match this new
-// type name, with the suffix (e.g. ping -> pingRequest). This is
-// to avoid ambiguous parameter and function names.
-func (ge *goEncoder) wsdl2goType(t, suffix string) string {
+// Converts types from wsdl type to Go type.
+func (ge *goEncoder) wsdl2goType(t string) string {
 	// TODO: support other types.
 	v := ge.trimns(t)
 	if _, exists := ge.stypes[v]; exists {
@@ -446,28 +466,7 @@ func (ge *goEncoder) wsdl2goType(t, suffix string) string {
 		ge.needsDurationType = true
 		return "Duration"
 	default:
-		if newname, exists := ge.rtypes[t]; exists {
-			t = newname
-		} else if suffix != "" {
-			// These types are parameters to functions. Since
-			// they are structs, we set their names to have
-			// suffixes Request and Response based on how
-			// they're used.
-			if strings.HasSuffix(t, suffix) {
-				t = v
-			} else {
-				ge.renameType(t, t+suffix)
-				t = v + suffix
-			}
-			// Request types need a special xml tag to enable
-			// encoding them correct. Responses cannot have it.
-			if suffix == "Request" {
-				ge.needsNSTag[t] = v
-			}
-		} else {
-			t = v
-		}
-		return "*" + strings.Title(t)
+		return "*" + strings.Title(v)
 	}
 }
 
@@ -510,7 +509,6 @@ func (ge *goEncoder) renameType(old, name string) {
 		if !exists {
 			return
 		}
-		ge.rtypes[old] = name
 		name = ge.trimns(name)
 	}
 	ct.Name = name
@@ -530,13 +528,13 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 			continue
 		}
 		ge.writeComments(&b, st.Name, "")
-		fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base, ""))
+		fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base))
 		ge.genValidator(&b, st.Name, st.Restriction)
 	}
 	var err error
 	for _, name := range ge.sortedComplexTypes() {
 		ct := ge.ctypes[name]
-		err = ge.genGoStruct(&b, ct)
+		err = ge.genGoStruct(&b, d, ct)
 		if err != nil {
 			return err
 		}
@@ -623,7 +621,7 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 		return
 	}
 	args := make([]string, len(r.Enum))
-	t := ge.wsdl2goType(r.Base, "")
+	t := ge.wsdl2goType(r.Base)
 	for i, v := range r.Enum {
 		if t == "string" {
 			args[i] = strconv.Quote(v.Value)
@@ -643,7 +641,7 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 	})
 }
 
-func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
+func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
 	if ct.Abstract {
 		return nil
 	}
@@ -663,12 +661,14 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 		// dont generate empty structs
 		return nil
 	}
-	ge.writeComments(w, ct.Name, ct.Doc)
-	fmt.Fprintf(w, "type %s struct {\n", strings.Title(ct.Name))
-	if tag, exists := ge.needsNSTag[ct.Name]; exists {
-		fmt.Fprintf(w, "XMLName xml.Name `xml:\"ns:%s\" json:\"-\" yaml:\"-\"`\n", tag)
+	name := strings.Title(ct.Name)
+	ge.writeComments(w, name, ct.Doc)
+	fmt.Fprintf(w, "type %s struct {\n", name)
+	if ge.needsTag[name] {
+		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
+			d.TargetNamespace, name)
 	}
-	err := ge.genStructFields(w, ct)
+	err := ge.genStructFields(w, d, ct)
 	if err != nil {
 		return err
 	}
@@ -676,15 +676,15 @@ func (ge *goEncoder) genGoStruct(w io.Writer, ct *wsdl.ComplexType) error {
 	return nil
 }
 
-func (ge *goEncoder) genStructFields(w io.Writer, ct *wsdl.ComplexType) error {
-	err := ge.genComplexContent(w, ct)
+func (ge *goEncoder) genStructFields(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
+	err := ge.genComplexContent(w, d, ct)
 	if err != nil {
 		return err
 	}
 	return ge.genElements(w, ct)
 }
 
-func (ge *goEncoder) genComplexContent(w io.Writer, ct *wsdl.ComplexType) error {
+func (ge *goEncoder) genComplexContent(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
 	if ct.ComplexContent == nil || ct.ComplexContent.Extension == nil {
 		return nil
 	}
@@ -692,7 +692,7 @@ func (ge *goEncoder) genComplexContent(w io.Writer, ct *wsdl.ComplexType) error 
 	if ext.Base != "" {
 		base, exists := ge.ctypes[ge.trimns(ext.Base)]
 		if exists {
-			err := ge.genStructFields(w, base)
+			err := ge.genStructFields(w, d, base)
 			if err != nil {
 				return err
 			}
@@ -746,7 +746,7 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			tag = el.Name + ">" + slicetype
 		}
 	}
-	typ := ge.wsdl2goType(el.Type, "")
+	typ := ge.wsdl2goType(el.Type)
 	if el.Nillable || el.Min == 0 {
 		tag += ",omitempty"
 	}

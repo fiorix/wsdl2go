@@ -38,12 +38,12 @@ import (
 )
 
 func main() {
-	cli := &soap.Client{
+	cli := soap.Client{
 		URL: "http://server",
 		Namespace: hello.Namespace,
 	}
-	req := &hello.EchoRequest{Data: "echo"}
-	reply, err := hello.Echo(cli, req)
+	conn := hello.NewService(&cli)
+	reply, err := conn.Echo(cli, &hello.EchoRequest{Data: "echo"})
 	...
 }
 ```

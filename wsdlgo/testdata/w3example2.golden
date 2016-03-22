@@ -9,27 +9,37 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://example.com/stockquote.wsdl"
 
+// StockQuotePortType was auto-generated from WSDL.
+type StockQuotePortType struct {
+	cli *soap.Client
+}
+
+// NewStockQuotePortType creates an initializes a StockQuotePortType.
+func NewStockQuotePortType(cli *soap.Client) *StockQuotePortType {
+	return &StockQuotePortType{cli}
+}
+
 // GetLastTradePrice was auto-generated from WSDL.
-func GetLastTradePrice(cli soap.RoundTripper, α *TradePriceRequest) (β *TradePriceResponse, err error) {
+func (p *StockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error) {
 	γ := struct {
 		XMLName xml.Name `xml:"Envelope"`
 		Body    struct {
-			M TradePriceResponse `xml:"TradePriceResponse"`
+			M TradePrice `xml:"TradePrice"`
 		}
 	}{}
-	if err = cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
 }
 
-// TradePriceRequest was auto-generated from WSDL.
-type TradePriceRequest struct {
-	XMLName      xml.Name `xml:"ns:TradePriceRequest" json:"-" yaml:"-"`
-	TickerSymbol string   `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
+// TradePrice was auto-generated from WSDL.
+type TradePrice struct {
+	Price float64 `xml:"price,omitempty" json:"price,omitempty" yaml:"price,omitempty"`
 }
 
-// TradePriceResponse was auto-generated from WSDL.
-type TradePriceResponse struct {
-	Price float64 `xml:"price,omitempty" json:"price,omitempty" yaml:"price,omitempty"`
+// TradePriceRequest was auto-generated from WSDL.
+type TradePriceRequest struct {
+	XMLName      xml.Name `xml:"http://example.com/stockquote.wsdl TradePriceRequest" json:"-" yaml:"-"`
+	TickerSymbol string   `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
 }
