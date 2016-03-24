@@ -9,16 +9,16 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://namespaces.snowboard-info.com"
 
+// NewGetEndorsingBoarderPortType creates an initializes a GetEndorsingBoarderPortType.
+func NewGetEndorsingBoarderPortType(cli *soap.Client) GetEndorsingBoarderPortType {
+	return &getEndorsingBoarderPortType{cli}
+}
+
 // GetEndorsingBoarderPortTypeInterface was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type GetEndorsingBoarderPortType interface {
 	// GetEndorsingBoarder was auto-generated from WSDL.
 	GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error)
-}
-
-// NewGetEndorsingBoarderPortType creates an initializes a GetEndorsingBoarderPortType.
-func NewGetEndorsingBoarderPortType(cli *soap.Client) GetEndorsingBoarderPortType {
-	return &getEndorsingBoarderPortType{cli}
 }
 
 // GetEndorsingBoarder was auto-generated from WSDL.

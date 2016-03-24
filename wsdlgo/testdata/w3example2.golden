@@ -9,16 +9,16 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://example.com/stockquote.wsdl"
 
+// NewStockQuotePortType creates an initializes a StockQuotePortType.
+func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
+	return &stockQuotePortType{cli}
+}
+
 // StockQuotePortTypeInterface was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
 	// GetLastTradePrice was auto-generated from WSDL.
 	GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error)
-}
-
-// NewStockQuotePortType creates an initializes a StockQuotePortType.
-func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
-	return &stockQuotePortType{cli}
 }
 
 // TradePrice was auto-generated from WSDL.
