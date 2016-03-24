@@ -33,6 +33,12 @@ func (p *StockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *Trade
 	return &γ.Body.M, nil
 }
 
+// StockQuotePortTypeInterface was auto-generated from WSDL
+// and defines interface for the data type.
+type StockQuotePortTypeInterface interface {
+	GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error)
+}
+
 // TradePrice was auto-generated from WSDL.
 type TradePrice struct {
 	Price float64 `xml:"price,omitempty" json:"price,omitempty" yaml:"price,omitempty"`

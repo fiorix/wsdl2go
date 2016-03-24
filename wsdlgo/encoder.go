@@ -139,6 +139,10 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	if err != nil {
 		return err
 	}
+	err = ge.writeInterfaceFuncs(&b, d)
+	if err != nil {
+		return err
+	}
 	err = ge.writeGoTypes(&b, d)
 	if err != nil {
 		return err
@@ -359,6 +363,74 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		ret[0],
 	})
 	return true
+}
+
+var interfaceTypeT = template.Must(template.New("interfaceType").Parse(`
+// {{.}}Interface was auto-generated from WSDL
+// and defines interface for the data type.
+type {{.}}Interface interface {
+`))
+
+// writeInterfaceFuncs writes Go interface definitions from WSDL types to w.
+// Functions are written in the same order of the WSDL document.
+func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error {
+	err := interfaceTypeT.Execute(w, strings.Title(d.PortType.Name))
+	if err != nil {
+		return err
+	}
+
+	// Looping over the operations to determine what are the interface
+	// functions
+	for _, op := range d.PortType.Operations {
+		in, err := ge.inputParams(op)
+		if err != nil {
+			return err
+		}
+		out, err := ge.outputParams(op)
+		if err != nil {
+			return err
+		}
+		ret := make([]string, len(out))
+		for i, p := range out {
+			parts := strings.SplitN(p, " ", 2)
+			if len(parts) == 2 {
+				ret[i] = ge.wsdl2goDefault(parts[1])
+			}
+		}
+		ge.writeInterfaceFunc(w, d, op, in, out, ret)
+
+	}
+
+	fmt.Fprintf(w, "}\n")
+	return nil
+
+}
+
+var interfaceFuncT = template.Must(template.New("interfaceFunc").Parse(
+	`	{{.Name}}({{.Input}}) ({{.Output}}) 
+`))
+
+func (ge *goEncoder) writeInterfaceFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, in, out, ret []string) {
+	if _, exists := ge.soapOps[op.Name]; !exists {
+		return
+	}
+	if len(in) != 1 && len(out) != 2 {
+		return
+	}
+	in[0] = renameParam(in[0], "α")
+	out[0] = renameParam(out[0], "β")
+	if strings.HasPrefix(ret[0], "&") {
+		ret[0] = "nil"
+	}
+	interfaceFuncT.Execute(w, &struct {
+		Name   string
+		Input  string
+		Output string
+	}{
+		strings.Title(op.Name),
+		strings.Join(in, ","),
+		strings.Join(out, ","),
+	})
 }
 
 func renameParam(p, name string) string {

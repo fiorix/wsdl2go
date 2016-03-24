@@ -33,6 +33,12 @@ func (p *GetEndorsingBoarderPortType) GetEndorsingBoarder(α *GetEndorsingBoarde
 	return &γ.Body.M, nil
 }
 
+// GetEndorsingBoarderPortTypeInterface was auto-generated from WSDL
+// and defines interface for the data type.
+type GetEndorsingBoarderPortTypeInterface interface {
+	GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error)
+}
+
 // GetEndorsingBoarder was auto-generated from WSDL.
 type GetEndorsingBoarder struct {
 	XMLName      xml.Name `xml:"http://namespaces.snowboard-info.com GetEndorsingBoarder" json:"-" yaml:"-"`

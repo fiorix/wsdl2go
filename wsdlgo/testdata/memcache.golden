@@ -61,6 +61,14 @@ func (p *MemoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiRespo
 	return &γ.Body.M, nil
 }
 
+// MemoryServicePortTypeInterface was auto-generated from WSDL
+// and defines interface for the data type.
+type MemoryServicePortTypeInterface interface {
+	Get(α string) (β *GetResponse, err error)
+	Set(α *SetRequest) (β bool, err error)
+	GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error)
+}
+
 // Duration in WSDL format.
 type Duration string
 
