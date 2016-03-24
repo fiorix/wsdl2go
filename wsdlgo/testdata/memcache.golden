@@ -14,7 +14,7 @@ func NewMemoryServicePortType(cli *soap.Client) MemoryServicePortType {
 	return &memoryServicePortType{cli}
 }
 
-// MemoryServicePortTypeInterface was auto-generated from WSDL
+// MemoryServicePortType was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type MemoryServicePortType interface {
 	// Get was auto-generated from WSDL.

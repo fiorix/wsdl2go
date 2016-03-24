@@ -14,7 +14,7 @@ func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
 	return &stockQuotePortType{cli}
 }
 
-// StockQuotePortTypeInterface was auto-generated from WSDL
+// StockQuotePortType was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
 	// GetLastTradePrice was auto-generated from WSDL.
