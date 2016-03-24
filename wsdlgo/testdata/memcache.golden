@@ -9,64 +9,22 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://localhost:8080/MemoryService.wsdl"
 
-// MemoryServicePortType was auto-generated from WSDL.
-type MemoryServicePortType struct {
-	cli *soap.Client
+// MemoryServicePortTypeInterface was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type MemoryServicePortType interface {
+	// Get was auto-generated from WSDL.
+	Get(α string) (β *GetResponse, err error)
+
+	// Set was auto-generated from WSDL.
+	Set(α *SetRequest) (β bool, err error)
+
+	// GetMulti was auto-generated from WSDL.
+	GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error)
 }
 
 // NewMemoryServicePortType creates an initializes a MemoryServicePortType.
-func NewMemoryServicePortType(cli *soap.Client) *MemoryServicePortType {
-	return &MemoryServicePortType{cli}
-}
-
-// Get was auto-generated from WSDL.
-func (p *MemoryServicePortType) Get(α string) (β *GetResponse, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M GetResponse `xml:"GetResponse"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
-// Set was auto-generated from WSDL.
-func (p *MemoryServicePortType) Set(α *SetRequest) (β bool, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M bool `xml:"bool"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return false, err
-	}
-	return γ.Body.M, nil
-}
-
-// GetMulti was auto-generated from WSDL.
-func (p *MemoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M GetMultiResponse `xml:"GetMultiResponse"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
-// MemoryServicePortTypeInterface was auto-generated from WSDL
-// and defines interface for the data type.
-type MemoryServicePortTypeInterface interface {
-	Get(α string) (β *GetResponse, err error)
-	Set(α *SetRequest) (β bool, err error)
-	GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error)
+func NewMemoryServicePortType(cli *soap.Client) MemoryServicePortType {
+	return &memoryServicePortType{cli}
 }
 
 // Duration in WSDL format.
@@ -95,4 +53,51 @@ type SetRequest struct {
 	Key        string   `xml:"Key" json:"Key" yaml:"Key"`
 	Value      string   `xml:"Value" json:"Value" yaml:"Value"`
 	Expiration Duration `xml:"Expiration,omitempty" json:"Expiration,omitempty" yaml:"Expiration,omitempty"`
+}
+
+// memoryServicePortType implements the MemoryServicePortType interface.
+type memoryServicePortType struct {
+	cli *soap.Client
+}
+
+// Get was auto-generated from WSDL.
+func (p *memoryServicePortType) Get(α string) (β *GetResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetResponse `xml:"GetResponse"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
+}
+
+// Set was auto-generated from WSDL.
+func (p *memoryServicePortType) Set(α *SetRequest) (β bool, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M bool `xml:"bool"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return false, err
+	}
+	return γ.Body.M, nil
+}
+
+// GetMulti was auto-generated from WSDL.
+func (p *memoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetMultiResponse `xml:"GetMultiResponse"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
 }

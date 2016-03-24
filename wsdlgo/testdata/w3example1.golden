@@ -9,34 +9,16 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://namespaces.snowboard-info.com"
 
-// GetEndorsingBoarderPortType was auto-generated from WSDL.
-type GetEndorsingBoarderPortType struct {
-	cli *soap.Client
+// GetEndorsingBoarderPortTypeInterface was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type GetEndorsingBoarderPortType interface {
+	// GetEndorsingBoarder was auto-generated from WSDL.
+	GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error)
 }
 
 // NewGetEndorsingBoarderPortType creates an initializes a GetEndorsingBoarderPortType.
-func NewGetEndorsingBoarderPortType(cli *soap.Client) *GetEndorsingBoarderPortType {
-	return &GetEndorsingBoarderPortType{cli}
-}
-
-// GetEndorsingBoarder was auto-generated from WSDL.
-func (p *GetEndorsingBoarderPortType) GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
-// GetEndorsingBoarderPortTypeInterface was auto-generated from WSDL
-// and defines interface for the data type.
-type GetEndorsingBoarderPortTypeInterface interface {
-	GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error)
+func NewGetEndorsingBoarderPortType(cli *soap.Client) GetEndorsingBoarderPortType {
+	return &getEndorsingBoarderPortType{cli}
 }
 
 // GetEndorsingBoarder was auto-generated from WSDL.
@@ -54,4 +36,23 @@ type GetEndorsingBoarderFault struct {
 // GetEndorsingBoarderResponse was auto-generated from WSDL.
 type GetEndorsingBoarderResponse struct {
 	EndorsingBoarder string `xml:"endorsingBoarder,omitempty" json:"endorsingBoarder,omitempty" yaml:"endorsingBoarder,omitempty"`
+}
+
+// getEndorsingBoarderPortType implements the GetEndorsingBoarderPortType interface.
+type getEndorsingBoarderPortType struct {
+	cli *soap.Client
+}
+
+// GetEndorsingBoarder was auto-generated from WSDL.
+func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(α *GetEndorsingBoarder) (β *GetEndorsingBoarderResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
 }

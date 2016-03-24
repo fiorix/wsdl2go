@@ -9,34 +9,16 @@ import (
 // Namespace was auto-generated from WSDL.
 var Namespace = "http://example.com/stockquote.wsdl"
 
-// StockQuotePortType was auto-generated from WSDL.
-type StockQuotePortType struct {
-	cli *soap.Client
+// StockQuotePortTypeInterface was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type StockQuotePortType interface {
+	// GetLastTradePrice was auto-generated from WSDL.
+	GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error)
 }
 
 // NewStockQuotePortType creates an initializes a StockQuotePortType.
-func NewStockQuotePortType(cli *soap.Client) *StockQuotePortType {
-	return &StockQuotePortType{cli}
-}
-
-// GetLastTradePrice was auto-generated from WSDL.
-func (p *StockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M TradePrice `xml:"TradePrice"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
-// StockQuotePortTypeInterface was auto-generated from WSDL
-// and defines interface for the data type.
-type StockQuotePortTypeInterface interface {
-	GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error)
+func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
+	return &stockQuotePortType{cli}
 }
 
 // TradePrice was auto-generated from WSDL.
@@ -48,4 +30,23 @@ type TradePrice struct {
 type TradePriceRequest struct {
 	XMLName      xml.Name `xml:"http://example.com/stockquote.wsdl TradePriceRequest" json:"-" yaml:"-"`
 	TickerSymbol string   `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
+}
+
+// stockQuotePortType implements the StockQuotePortType interface.
+type stockQuotePortType struct {
+	cli *soap.Client
+}
+
+// GetLastTradePrice was auto-generated from WSDL.
+func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M TradePrice `xml:"TradePrice"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
 }
