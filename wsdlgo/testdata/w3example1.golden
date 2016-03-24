@@ -14,7 +14,7 @@ func NewGetEndorsingBoarderPortType(cli *soap.Client) GetEndorsingBoarderPortTyp
 	return &getEndorsingBoarderPortType{cli}
 }
 
-// GetEndorsingBoarderPortTypeInterface was auto-generated from WSDL
+// GetEndorsingBoarderPortType was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type GetEndorsingBoarderPortType interface {
 	// GetEndorsingBoarder was auto-generated from WSDL.
