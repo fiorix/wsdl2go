@@ -4,8 +4,6 @@ package soap
 import (
 	"bytes"
 	"encoding/xml"
-	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -34,12 +32,13 @@ type AuthHeader struct {
 
 // Client is a SOAP client.
 type Client struct {
-	URL         string       // URL of the server
-	Namespace   string       // SOAP Namespace
-	Envelope    string       // Optional SOAP Envelope
-	Header      Header       // Optional SOAP Header
-	ContentType string       // Optional Content-Type (default text/xml)
-	Config      *http.Client // Optional HTTP client
+	URL         string              // URL of the server
+	Namespace   string              // SOAP Namespace
+	Envelope    string              // Optional SOAP Envelope
+	Header      Header              // Optional SOAP Header
+	ContentType string              // Optional Content-Type (default text/xml)
+	Config      *http.Client        // Optional HTTP client
+	Pre         func(*http.Request) // Optional hook to modify outbound requests
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -69,19 +68,19 @@ func (c *Client) RoundTrip(in, out Message) error {
 	if cli == nil {
 		cli = http.DefaultClient
 	}
-	resp, err := cli.Post(c.URL, ct, &b)
+	r, err := http.NewRequest("POST", c.URL, &b)
+	if err != nil {
+		return err
+	}
+	r.Header.Set("Content-Type", ct)
+	if c.Pre != nil {
+		c.Pre(r)
+	}
+	resp, err := cli.Do(r)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if false {
-		// to be removed
-		z, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		log.Printf("%s", z)
-	}
 	return xml.NewDecoder(resp.Body).Decode(out)
 }
 
