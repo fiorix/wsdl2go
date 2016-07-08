@@ -32,7 +32,7 @@
          </all>
        </complexType>
 
-       <complexType name="GetMultiRequest">
+       <complexType name="getMultiRequest">
         <sequence>
           <element name="Keys" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
         </sequence>

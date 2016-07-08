@@ -30,12 +30,6 @@ type MemoryServicePortType interface {
 // Duration in WSDL format.
 type Duration string
 
-// GetMultiRequest was auto-generated from WSDL.
-type GetMultiRequest struct {
-	XMLName xml.Name `xml:"http://localhost:8080/MemoryService.wsdl GetMultiRequest" json:"-" yaml:"-"`
-	Keys    []string `xml:"Keys" json:"Keys" yaml:"Keys"`
-}
-
 // GetMultiResponse was auto-generated from WSDL.
 type GetMultiResponse struct {
 	Values []*GetResponse `xml:"Values,omitempty" json:"Values,omitempty" yaml:"Values,omitempty"`
@@ -53,6 +47,12 @@ type SetRequest struct {
 	Key        string   `xml:"Key" json:"Key" yaml:"Key"`
 	Value      string   `xml:"Value" json:"Value" yaml:"Value"`
 	Expiration Duration `xml:"Expiration,omitempty" json:"Expiration,omitempty" yaml:"Expiration,omitempty"`
+}
+
+// GetMultiRequest was auto-generated from WSDL.
+type GetMultiRequest struct {
+	XMLName xml.Name `xml:"http://localhost:8080/MemoryService.wsdl getMultiRequest" json:"-" yaml:"-"`
+	Keys    []string `xml:"Keys" json:"Keys" yaml:"Keys"`
 }
 
 // memoryServicePortType implements the MemoryServicePortType interface.
