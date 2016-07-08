@@ -741,7 +741,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	fmt.Fprintf(w, "type %s struct {\n", name)
 	if ge.needsTag[name] {
 		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
-			d.TargetNamespace, name)
+			d.TargetNamespace, ct.Name)
 	}
 	err := ge.genStructFields(w, d, ct)
 	if err != nil {
