@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -98,8 +99,20 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	var errb bytes.Buffer
 	input := b.String()
 	// dat pipe
+
+	goroot := os.Getenv("GOROOT")
+	if goroot == "" {
+		// no goroot is set, check to see whether it is windows or not
+		if runtime.GOOS == "windows" {
+			goroot = "C:\\go"
+		} else {
+			goroot = "/usr/local/go"
+		}
+
+	}
+
 	cmd := exec.Cmd{
-		Path:   filepath.Join(os.Getenv("GOROOT"), "bin", "gofmt"),
+		Path:   filepath.Join(goroot, "bin", "gofmt"),
 		Stdin:  &b,
 		Stdout: ge.w,
 		Stderr: &errb,
