@@ -37,7 +37,7 @@ func main() {
 	case "", "-":
 		w = os.Stdout
 	default:
-		f, err := os.OpenFile(opts.Dst, os.O_WRONLY, 0644)
+		f, err := os.OpenFile(opts.Dst, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
