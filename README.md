@@ -11,7 +11,8 @@ go get github.com/fiorix/wsdl2go
 
 ### Usage
 
-Make sure you have gofmt under $GOROOT/bin, otherwise it'll fail.
+Make sure you have gofmt under $GOROOT/bin 
+(or /usr/local/go/bin if $GOROOT is not defined), otherwise it'll fail.
 
 ```
 wsdl2go < file.wsdl > hello.go
