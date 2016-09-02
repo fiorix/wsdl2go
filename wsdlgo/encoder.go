@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -84,6 +83,15 @@ func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
 }
 
+func gofmtPath() (string, error) {
+	goroot := os.Getenv("GOROOT")
+	if goroot != "" {
+		return filepath.Join(goroot, "bin", "gofmt"), nil
+	}
+	return exec.LookPath("gofmt")
+
+}
+
 func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	if d == nil {
 		return nil
@@ -100,19 +108,13 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	input := b.String()
 	// dat pipe
 
-	goroot := os.Getenv("GOROOT")
-	if goroot == "" {
-		// no goroot is set, check to see whether it is windows or not
-		if runtime.GOOS == "windows" {
-			goroot = "C:\\go"
-		} else {
-			goroot = "/usr/local/go"
-		}
-
+	path, err := gofmtPath()
+	if err != nil {
+		return fmt.Errorf("Cannot find gofmt with err %s", err.Error())
 	}
 
 	cmd := exec.Cmd{
-		Path:   filepath.Join(goroot, "bin", "gofmt"),
+		Path:   path,
 		Stdin:  &b,
 		Stdout: ge.w,
 		Stderr: &errb,
