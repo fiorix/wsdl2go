@@ -83,6 +83,15 @@ func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
 }
 
+func gofmtPath() (string, error) {
+	goroot := os.Getenv("GOROOT")
+	if goroot != "" {
+		return filepath.Join(goroot, "bin", "gofmt"), nil
+	}
+	return exec.LookPath("gofmt")
+
+}
+
 func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	if d == nil {
 		return nil
@@ -98,8 +107,14 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	var errb bytes.Buffer
 	input := b.String()
 	// dat pipe
+
+	path, err := gofmtPath()
+	if err != nil {
+		return fmt.Errorf("Cannot find gofmt with err %s", err.Error())
+	}
+
 	cmd := exec.Cmd{
-		Path:   filepath.Join(os.Getenv("GOROOT"), "bin", "gofmt"),
+		Path:   path,
 		Stdin:  &b,
 		Stdout: ge.w,
 		Stderr: &errb,
