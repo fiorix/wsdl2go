@@ -10,7 +10,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -323,7 +322,6 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 		i++
 	}
 	n := d.PortType.Name
-	defer func() { log.Println("wtf?") }()
 	return interfaceTypeT.Execute(w, &struct {
 		Name  string
 		Impl  string // private type that implements the interface
