@@ -10,6 +10,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -291,7 +292,8 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 	funcs := make([]*interfaceTypeFunc, len(d.PortType.Operations))
 	// Looping over the operations to determine what are the interface
 	// functions.
-	for i, op := range d.PortType.Operations {
+	i := 0
+	for _, op := range d.PortType.Operations {
 		if _, exists := ge.soapOps[op.Name]; !exists {
 			// TODO: rpc?
 			continue
@@ -318,8 +320,10 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 			Input:  strings.Join(in, ","),
 			Output: strings.Join(out, ","),
 		}
+		i++
 	}
 	n := d.PortType.Name
+	defer func() { log.Println("wtf?") }()
 	return interfaceTypeT.Execute(w, &struct {
 		Name  string
 		Impl  string // private type that implements the interface
@@ -327,7 +331,7 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 	}{
 		strings.Title(n),
 		strings.ToLower(n)[:1] + n[1:],
-		funcs,
+		funcs[:i],
 	})
 }
 
