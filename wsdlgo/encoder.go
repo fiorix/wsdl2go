@@ -6,9 +6,12 @@ package wsdlgo
 // TODO: fully support SOAP bindings, faults, and transports.
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"io"
 	"net/http"
 	"os"
@@ -106,13 +109,24 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	}
 	var errb bytes.Buffer
 	input := b.String()
-	// dat pipe
 
-	path, err := gofmtPath()
+	// try to parse the generated code
+	fset := token.NewFileSet()
+	_, err = parser.ParseFile(fset, "", &b, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("Cannot find gofmt with err %s", err.Error())
+		var src bytes.Buffer
+		s := bufio.NewScanner(strings.NewReader(input))
+		for line := 1; s.Scan(); line++ {
+			fmt.Fprintf(&src, "%5d\t%s\n", line, s.Bytes())
+		}
+		return fmt.Errorf("generated bad code: %v\n%s", err, src.String())
 	}
 
+	// dat pipe to gofmt
+	path, err := gofmtPath()
+	if err != nil {
+		return fmt.Errorf("cannot find gofmt with err: %v", err)
+	}
 	cmd := exec.Cmd{
 		Path:   path,
 		Stdin:  &b,
@@ -305,7 +319,7 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 		if err != nil {
 			return err
 		}
-		if len(in) != 1 && len(out) != 2 {
+		if len(in) != 1 || len(out) != 2 {
 			continue
 		}
 		name := strings.Title(op.Name)
@@ -422,7 +436,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
-	if len(in) != 1 && len(out) != 2 {
+	if len(in) != 1 || len(out) != 2 {
 		return false
 	}
 	ge.needsStdPkg["encoding/xml"] = true
@@ -488,6 +502,34 @@ func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]string, error) {
 	return append(ge.genParams(resp, false), out[0]), nil
 }
 
+var isGoKeyword = map[string]bool{
+	"break":       true,
+	"case":        true,
+	"chan":        true,
+	"const":       true,
+	"continue":    true,
+	"default":     true,
+	"else":        true,
+	"defer":       true,
+	"fallthrough": true,
+	"for":         true,
+	"func":        true,
+	"go":          true,
+	"goto":        true,
+	"if":          true,
+	"import":      true,
+	"interface":   true,
+	"map":         true,
+	"package":     true,
+	"range":       true,
+	"return":      true,
+	"select":      true,
+	"struct":      true,
+	"switch":      true,
+	"type":        true,
+	"var":         true,
+}
+
 func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []string {
 	params := make([]string, len(m.Parts))
 	for i, param := range m.Parts {
@@ -498,7 +540,11 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []string {
 		case param.Element != "":
 			t = ge.wsdl2goType(param.Element)
 		}
-		params[i] = param.Name + " " + t
+		name := param.Name
+		if isGoKeyword[name] {
+			name = "_" + name
+		}
+		params[i] = name + " " + t
 		if needsTag {
 			ge.needsTag[strings.TrimPrefix(t, "*")] = true
 		}
@@ -558,7 +604,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		ge.needsDurationType = true
 		return "Duration"
 	default:
-		return "*" + strings.Title(v)
+		return "*" + strings.Title(strings.Replace(v, ".", "", -1))
 	}
 }
 
