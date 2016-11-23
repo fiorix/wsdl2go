@@ -155,7 +155,7 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	ge.cacheFuncs(d)
 	ge.cacheMessages(d)
 	ge.cacheSOAPOperations(d)
-	pkg := strings.ToLower(d.Binding.Name)
+	pkg := ge.formatPackageName(d.Binding.Name)
 	if pkg == "" {
 		pkg = "internal"
 	}
@@ -198,6 +198,10 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	}
 	_, err = io.Copy(w, &b)
 	return err
+}
+
+func (ge *goEncoder) formatPackageName(pkg string) string {
+	return strings.Replace(strings.ToLower(pkg), ".", "", -1)
 }
 
 func (ge *goEncoder) importParts(d *wsdl.Definitions) error {
