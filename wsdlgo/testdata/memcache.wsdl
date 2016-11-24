@@ -85,7 +85,7 @@
       </operation>
    </portType>
 
-   <binding name="MemoryService" type="tns:MemoryServicePortType">
+   <binding name="Memory.Service" type="tns:MemoryServicePortType">
       <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
       <operation name="Get">
          <soap:operation soapAction="Get"/>
