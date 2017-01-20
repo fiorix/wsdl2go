@@ -79,11 +79,15 @@ Types supported:
 - [x] simpleType (w/ enum and validation)
 - [x] complexType (struct)
 - [x] complexContent (slices, embedded structs)
+- [x] token (as string)
+- [x] any (slice of empty interfaces)
+- [x] anyURI (string)
+- [x] QName (string)
+- [x] union (empty interface w/ comments)
+- [x] nonNegativeInteger (uint)
 - [ ] faults
 - [ ] decimal
 - [ ] g{Day,Month,Year}...
-- [ ] anyURI
-- [ ] QName
 - [ ] NOTATION
 
 Date types are currently defined as strings, need to implement XML

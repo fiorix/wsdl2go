@@ -20,11 +20,11 @@ type MemoryServicePortType interface {
 	// Get was auto-generated from WSDL.
 	Get(α string) (β *GetResponse, err error)
 
-	// Set was auto-generated from WSDL.
-	Set(α *SetRequest) (β bool, err error)
-
 	// GetMulti was auto-generated from WSDL.
 	GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error)
+
+	// Set was auto-generated from WSDL.
+	Set(α *SetRequest) (β bool, err error)
 }
 
 // Duration in WSDL format.
@@ -74,20 +74,6 @@ func (p *memoryServicePortType) Get(α string) (β *GetResponse, err error) {
 	return &γ.Body.M, nil
 }
 
-// Set was auto-generated from WSDL.
-func (p *memoryServicePortType) Set(α *SetRequest) (β bool, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M bool `xml:"bool"`
-		}
-	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
-		return false, err
-	}
-	return γ.Body.M, nil
-}
-
 // GetMulti was auto-generated from WSDL.
 func (p *memoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiResponse, err error) {
 	γ := struct {
@@ -100,4 +86,18 @@ func (p *memoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiRespo
 		return nil, err
 	}
 	return &γ.Body.M, nil
+}
+
+// Set was auto-generated from WSDL.
+func (p *memoryServicePortType) Set(α *SetRequest) (β bool, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M bool `xml:"bool"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return false, err
+	}
+	return γ.Body.M, nil
 }

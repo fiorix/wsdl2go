@@ -47,8 +47,12 @@ type goEncoder struct {
 	stypes map[string]*wsdl.SimpleType
 	ctypes map[string]*wsdl.ComplexType
 
+	// elements cache
+	elements map[string]*wsdl.Element
+
 	// funcs cache
-	funcs map[string]*wsdl.Operation
+	funcs     map[string]*wsdl.Operation
+	funcnames []string
 
 	// messages cache
 	messages map[string]*wsdl.Message
@@ -73,6 +77,7 @@ func NewEncoder(w io.Writer) Encoder {
 		http:        http.DefaultClient,
 		stypes:      make(map[string]*wsdl.SimpleType),
 		ctypes:      make(map[string]*wsdl.ComplexType),
+		elements:    make(map[string]*wsdl.Element),
 		funcs:       make(map[string]*wsdl.Operation),
 		messages:    make(map[string]*wsdl.Message),
 		soapOps:     make(map[string]*wsdl.BindingOperation),
@@ -265,6 +270,52 @@ func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {
 	for _, v := range d.Schema.ComplexTypes {
 		ge.ctypes[v.Name] = v
 	}
+	// cache elements from schema
+	ge.cacheElements(d.Schema.Elements)
+	// cache elements from complex types
+	for _, ct := range ge.ctypes {
+		ge.cacheComplexTypeElements(ct)
+	}
+}
+
+func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
+	if ct.AllElements != nil {
+		ge.cacheElements(ct.AllElements)
+	}
+	if ct.Sequence != nil {
+		ge.cacheElements(ct.Sequence.Elements)
+	}
+	cc := ct.ComplexContent
+	if cc != nil {
+		cce := cc.Extension
+		if cce != nil && cce.Sequence != nil {
+			seq := cce.Sequence
+			for _, cct := range seq.ComplexTypes {
+				ge.cacheComplexTypeElements(cct)
+			}
+			ge.cacheElements(seq.Elements)
+		}
+	}
+}
+
+func (ge *goEncoder) cacheElements(ct []*wsdl.Element) {
+	for _, el := range ct {
+		if el.Name == "" || el.Type == "" {
+			continue
+		}
+		name := ge.trimns(el.Name)
+		if _, exists := ge.elements[name]; exists {
+			continue
+		}
+		ge.elements[name] = el
+		ct := el.ComplexType
+		if ct != nil {
+			ge.cacheElements(ct.AllElements)
+			if ct.Sequence != nil {
+				ge.cacheElements(ct.Sequence.Elements)
+			}
+		}
+	}
 }
 
 func (ge *goEncoder) cacheFuncs(d *wsdl.Definitions) {
@@ -272,6 +323,13 @@ func (ge *goEncoder) cacheFuncs(d *wsdl.Definitions) {
 	for _, v := range d.PortType.Operations {
 		ge.funcs[v.Name] = v
 	}
+	ge.funcnames = make([]string, len(ge.funcs))
+	i := 0
+	for k := range ge.funcs {
+		ge.funcnames[i] = k
+		i++
+	}
+	sort.Strings(ge.funcnames)
 }
 
 func (ge *goEncoder) cacheMessages(d *wsdl.Definitions) {
@@ -306,11 +364,12 @@ type interfaceTypeFunc struct{ Doc, Name, Input, Output string }
 // writeInterfaceFuncs writes Go interface definitions from WSDL types to w.
 // Functions are written in the same order of the WSDL document.
 func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error {
-	funcs := make([]*interfaceTypeFunc, len(d.PortType.Operations))
+	funcs := make([]*interfaceTypeFunc, len(ge.funcs))
 	// Looping over the operations to determine what are the interface
 	// functions.
 	i := 0
-	for _, op := range d.PortType.Operations {
+	for _, fn := range ge.funcnames {
+		op := ge.funcs[fn]
 		if _, exists := ge.soapOps[op.Name]; !exists {
 			// TODO: rpc?
 			continue
@@ -360,7 +419,7 @@ type {{.Name}} struct {
 `))
 
 func (ge *goEncoder) writePortType(w io.Writer, d *wsdl.Definitions) error {
-	if d.PortType.Operations == nil || len(d.PortType.Operations) == 0 {
+	if len(ge.funcs) == 0 {
 		return nil
 	}
 	n := d.PortType.Name
@@ -384,10 +443,11 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 				d.Binding.Name, d.Binding.Type)
 		}
 	}
-	if d.PortType.Operations == nil {
+	if len(ge.funcs) == 0 {
 		return nil
 	}
-	for _, op := range d.PortType.Operations {
+	for _, fn := range ge.funcnames {
+		op := ge.funcs[fn]
 		ge.writeComments(w, op.Name, op.Doc)
 		in, err := ge.inputParams(op)
 		if err != nil {
@@ -410,8 +470,9 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 			ge.needsExtPkg["golang.org/x/net/context"] = true
 			in = append([]string{"ctx context.Context"}, in...)
 			ge.fixParamConflicts(in, out)
+			fn := ge.fixFuncNameConflicts(strings.Title(op.Name))
 			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn %s\n}\n\n",
-				strings.Title(op.Name),
+				fn,
 				strings.Join(in, ","),
 				strings.Join(out, ","),
 				strings.Join(ret, ","),
@@ -556,6 +617,19 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []string {
 	return params
 }
 
+// Fixes conflicts between function and type names.
+func (ge *goEncoder) fixFuncNameConflicts(name string) string {
+	if _, exists := ge.stypes[name]; exists {
+		name += "Func"
+		return ge.fixFuncNameConflicts(name)
+	}
+	if _, exists := ge.ctypes[name]; exists {
+		name += "Func"
+		return ge.fixFuncNameConflicts(name)
+	}
+	return name
+}
+
 // Fixes request and response parameters with the same name, in place.
 // Each string in the slice consists of Go's "name Type", we only
 // compare names. In case of a conflict, we set the response one
@@ -593,7 +667,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "bool"
 	case "hexbinary", "base64binary":
 		return "[]byte"
-	case "string":
+	case "string", "anyuri", "token", "qname":
 		return "string"
 	case "date":
 		ge.needsDateType = true
@@ -601,12 +675,16 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 	case "time":
 		ge.needsTimeType = true
 		return "Time"
+	case "nonnegativeinteger":
+		return "uint"
 	case "datetime":
 		ge.needsDateTimeType = true
 		return "DateTime"
 	case "duration":
 		ge.needsDurationType = true
 		return "Duration"
+	case "anysequence":
+		return "interface{}"
 	default:
 		return "*" + strings.Title(strings.Replace(v, ".", "", -1))
 	}
@@ -666,12 +744,24 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 	var b bytes.Buffer
 	for _, name := range ge.sortedSimpleTypes() {
 		st := ge.stypes[name]
-		if st.Restriction == nil {
-			continue
+		if st.Restriction != nil {
+			ge.writeComments(&b, st.Name, "")
+			fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base))
+			ge.genValidator(&b, st.Name, st.Restriction)
+		} else if st.Union != nil {
+			types := strings.Split(st.Union.MemberTypes, " ")
+			ntypes := make([]string, len(types))
+			for i, t := range types {
+				t = strings.TrimSpace(t)
+				if t == "" {
+					continue
+				}
+				ntypes[i] = ge.wsdl2goType(t)
+			}
+			doc := st.Name + " is a union of: " + strings.Join(ntypes, ", ")
+			ge.writeComments(&b, st.Name, doc)
+			fmt.Fprintf(&b, "type %s interface{}\n\n", st.Name)
 		}
-		ge.writeComments(&b, st.Name, "")
-		fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base))
-		ge.genValidator(&b, st.Name, st.Restriction)
 	}
 	var err error
 	for _, name := range ge.sortedComplexTypes() {
@@ -799,12 +889,16 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	} else if len(ct.Sequence.ComplexTypes) == 0 && len(ct.Sequence.Elements) == 0 {
 		c++
 	}
-	if c > 2 {
-		// dont generate empty structs
-		return nil
-	}
 	name := strings.Title(ct.Name)
 	ge.writeComments(w, name, ct.Doc)
+	if ct.Sequence != nil && ct.Sequence.Any != nil {
+		fmt.Fprintf(w, "type %s []interface{}\n\n", name)
+		return nil
+	}
+	if c > 2 {
+		fmt.Fprintf(w, "type %s struct {}\n\n", name)
+		return nil
+	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
 	if ge.needsTag[name] {
 		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
@@ -870,14 +964,35 @@ func (ge *goEncoder) genElements(w io.Writer, ct *wsdl.ComplexType) error {
 }
 
 func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
+	if el.Ref != "" {
+		ref := ge.trimns(el.Ref)
+		nel, ok := ge.elements[ref]
+		if !ok {
+			return
+		}
+		el = nel
+	}
+	if el.Type == "" {
+		el.Type = "string"
+	}
 	var slicetype string
 	if el.Type == "" && el.ComplexType != nil {
 		seq := el.ComplexType.Sequence
-		if seq != nil && len(seq.Elements) == 1 {
-			n := el.Name
-			el = el.ComplexType.Sequence.Elements[0]
-			slicetype = el.Name
-			el.Name = n
+		if seq != nil {
+			if len(seq.Elements) == 1 {
+				n := el.Name
+				el = el.ComplexType.Sequence.Elements[0]
+				slicetype = el.Name
+				el.Name = n
+			} else if len(seq.Any) == 1 {
+				el = &wsdl.Element{
+					Name: el.Name,
+					Type: "anysequence",
+					Min:  seq.Any[0].Min,
+					Max:  seq.Any[0].Max,
+				}
+				slicetype = el.Name
+			}
 		}
 	}
 	tag := el.Name

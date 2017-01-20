@@ -52,7 +52,14 @@ type Schema struct {
 type SimpleType struct {
 	XMLName     xml.Name     `xml:"simpleType"`
 	Name        string       `xml:"name,attr"`
+	Union       *Union       `xml:"union"`
 	Restriction *Restriction `xml:"restriction"`
+}
+
+// Union is a mix of multiple types in a union.
+type Union struct {
+	XMLName     xml.Name `xml:"union"`
+	MemberTypes string   `xml:"memberTypes,attr"`
 }
 
 // Restriction describes the WSDL type of the simple type and
@@ -99,17 +106,26 @@ type Sequence struct {
 	XMLName      xml.Name       `xml:"sequence"`
 	ComplexTypes []*ComplexType `xml:"complexType"`
 	Elements     []*Element     `xml:"element"`
+	Any          []*AnyElement  `xml:"any"`
 }
 
 // Element describes an element of a given type.
 type Element struct {
 	XMLName     xml.Name     `xml:"element"`
 	Name        string       `xml:"name,attr"`
+	Ref         string       `xml:"ref,attr"`
 	Type        string       `xml:"type,attr"`
 	Min         int          `xml:"minOccurs,attr"`
 	Max         string       `xml:"maxOccurs,attr"` // can be # or unbounded
 	Nillable    bool         `xml:"nillable,attr"`
 	ComplexType *ComplexType `xml:"complexType"`
+}
+
+// AnyElement describes an element of an undefined type.
+type AnyElement struct {
+	XMLName xml.Name `xml:"any"`
+	Min     int      `xml:"minOccurs,attr"`
+	Max     string   `xml:"maxOccurs,attr"` // can be # or unbounded
 }
 
 // Import points to another WSDL to be imported at root level.
