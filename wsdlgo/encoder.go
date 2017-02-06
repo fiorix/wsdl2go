@@ -374,17 +374,18 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 			// TODO: rpc?
 			continue
 		}
-		in, err := ge.inputParams(op)
+		inParams, err := ge.inputParams(op)
 		if err != nil {
 			return err
 		}
-		out, err := ge.outputParams(op)
+		outParams, err := ge.outputParams(op)
 		if err != nil {
 			return err
 		}
-		if len(in) != 1 || len(out) != 2 {
+		if len(inParams) != 1 || len(outParams) != 2 {
 			continue
 		}
+		in, out := code(inParams), code(outParams)
 		name := strings.Title(op.Name)
 		in[0] = renameParam(in[0], "α")
 		out[0] = renameParam(out[0], "β")
@@ -449,14 +450,15 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 	for _, fn := range ge.funcnames {
 		op := ge.funcs[fn]
 		ge.writeComments(w, op.Name, op.Doc)
-		in, err := ge.inputParams(op)
+		inParams, err := ge.inputParams(op)
 		if err != nil {
 			return err
 		}
-		out, err := ge.outputParams(op)
+		outParams, err := ge.outputParams(op)
 		if err != nil {
 			return err
 		}
+		in, out := code(inParams), code(outParams)
 		ret := make([]string, len(out))
 		for i, p := range out {
 			parts := strings.SplitN(p, " ", 2)
@@ -464,7 +466,7 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 				ret[i] = ge.wsdl2goDefault(parts[1])
 			}
 		}
-		ok := ge.writeSOAPFunc(w, d, op, in, out, ret)
+		ok := ge.writeSOAPFunc(w, d, op, in, out, ret, outParams[0].xmlToken)
 		if !ok {
 			ge.needsStdPkg["errors"] = true
 			ge.needsExtPkg["golang.org/x/net/context"] = true
@@ -487,7 +489,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 	γ := struct {
 		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
 		Body    struct {
-			M {{.OutputType}} ` + "`xml:\"{{.OutputType}}\"`" + `
+			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
 		}
 	}{}
 	if err = p.cli.RoundTrip(α, &γ); err != nil {
@@ -497,7 +499,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 }
 `))
 
-func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, in, out, ret []string) bool {
+func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, in, out, ret []string, xmlToken string) bool {
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
@@ -513,19 +515,21 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		ret[0] = "nil"
 	}
 	soapFuncT.Execute(w, &struct {
-		PortType   string
-		Name       string
-		Input      string
-		Output     string
-		OutputType string
-		RetPtr     bool
-		RetDef     string
+		PortType      string
+		Name          string
+		Input         string
+		Output        string
+		OutputType    string
+		XMLOutputType string
+		RetPtr        bool
+		RetDef        string
 	}{
 		strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
 		strings.Title(op.Name),
 		strings.Join(in, ","),
 		strings.Join(out, ","),
 		strings.TrimPrefix(typ[1], "*"),
+		strings.TrimPrefix(xmlToken, "*"),
 		typ[1][0] == '*',
 		ret[0],
 	})
@@ -541,9 +545,9 @@ func renameParam(p, name string) string {
 }
 
 // returns list of function input parameters.
-func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]string, error) {
+func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]*parameter, error) {
 	if op.Input == nil {
-		return []string{}, nil
+		return []*parameter{}, nil
 	}
 	im := ge.trimns(op.Input.Message)
 	req, ok := ge.messages[im]
@@ -554,8 +558,8 @@ func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]string, error) {
 }
 
 // returns list of function output parameters plus error.
-func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]string, error) {
-	out := []string{"err error"}
+func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]*parameter, error) {
+	out := []*parameter{{code: "err error"}}
 	if op.Output == nil {
 		return out, nil
 	}
@@ -595,21 +599,36 @@ var isGoKeyword = map[string]bool{
 	"var":         true,
 }
 
-func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []string {
-	params := make([]string, len(m.Parts))
+type parameter struct {
+	code     string
+	xmlToken string
+}
+
+func code(list []*parameter) []string {
+	code := make([]string, len(list))
+	for i, p := range list {
+		code[i] = p.code
+	}
+	return code
+}
+
+func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
+	params := make([]*parameter, len(m.Parts))
 	for i, param := range m.Parts {
-		var t string
+		var t, token string
 		switch {
 		case param.Type != "":
 			t = ge.wsdl2goType(param.Type)
+			token = t
 		case param.Element != "":
 			t = ge.wsdl2goType(param.Element)
+			token = ge.trimns(param.Element)
 		}
 		name := param.Name
 		if isGoKeyword[name] {
 			name = "_" + name
 		}
-		params[i] = name + " " + t
+		params[i] = &parameter{code: name + " " + t, xmlToken: token}
 		if needsTag {
 			ge.needsTag[strings.TrimPrefix(t, "*")] = true
 		}
