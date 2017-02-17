@@ -41,6 +41,7 @@ var EncoderCases = []struct {
 	{F: "w3example2.wsdl", G: "w3example2.golden", E: nil},
 	{F: "memcache.wsdl", G: "memcache.golden", E: nil},
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
+	{F: "data.wsdl", G: "data.golden", E: nil},
 }
 
 func NewTestServer(t *testing.T) *httptest.Server {

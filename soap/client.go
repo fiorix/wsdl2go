@@ -4,6 +4,9 @@ package soap
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -81,6 +84,12 @@ func (c *Client) RoundTrip(in, out Message) error {
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		// read only the first Mb of the body in error case
+		limReader := io.LimitReader(resp.Body, 1024*1024)
+		body, _ := ioutil.ReadAll(limReader)
+		return fmt.Errorf("%q: %q", resp.Status, body)
+	}
 	return xml.NewDecoder(resp.Body).Decode(out)
 }
 

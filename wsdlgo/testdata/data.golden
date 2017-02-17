@@ -1,0 +1,79 @@
+package dataendpointhttpbinding
+
+import (
+	"encoding/xml"
+
+	"github.com/fiorix/wsdl2go/soap"
+)
+
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://pdf.host.com"
+
+// NewDataEndpointPortType creates an initializes a DataEndpointPortType.
+func NewDataEndpointPortType(cli *soap.Client) DataEndpointPortType {
+	return &dataEndpointPortType{cli}
+}
+
+// DataEndpointPortType was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type DataEndpointPortType interface {
+	// GetData was auto-generated from WSDL.
+	GetData(α *GetData) (β *GetDataResp, err error)
+}
+
+// BaseReq was auto-generated from WSDL.
+type BaseReq struct {
+	ClientIdentification *ClientIdentification `xml:"clientIdentification,omitempty" json:"clientIdentification,omitempty" yaml:"clientIdentification,omitempty"`
+}
+
+// BaseResp was auto-generated from WSDL.
+type BaseResp struct {
+	ErrorDetails *ErrorDetails `xml:"errorDetails,omitempty" json:"errorDetails,omitempty" yaml:"errorDetails,omitempty"`
+	Success      bool          `xml:"success,omitempty" json:"success,omitempty" yaml:"success,omitempty"`
+}
+
+// DataGenerationReq was auto-generated from WSDL.
+type DataGenerationReq struct {
+	ClientIdentification  *ClientIdentification `xml:"clientIdentification,omitempty" json:"clientIdentification,omitempty" yaml:"clientIdentification,omitempty"`
+	CustomerAccountNumber string                `xml:"customerAccountNumber,omitempty" json:"customerAccountNumber,omitempty" yaml:"customerAccountNumber,omitempty"`
+	PdfGenerationReqType  int                   `xml:"pdfGenerationReqType,omitempty" json:"pdfGenerationReqType,omitempty" yaml:"pdfGenerationReqType,omitempty"`
+	WithCreditTranferForm bool                  `xml:"withCreditTranferForm,omitempty" json:"withCreditTranferForm,omitempty" yaml:"withCreditTranferForm,omitempty"`
+}
+
+// DataGenerationResp was auto-generated from WSDL.
+type DataGenerationResp struct {
+	ErrorDetails *ErrorDetails `xml:"errorDetails,omitempty" json:"errorDetails,omitempty" yaml:"errorDetails,omitempty"`
+	Success      bool          `xml:"success,omitempty" json:"success,omitempty" yaml:"success,omitempty"`
+	Pdf          []byte        `xml:"pdf,omitempty" json:"pdf,omitempty" yaml:"pdf,omitempty"`
+	Url          string        `xml:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty"`
+}
+
+// GetData was auto-generated from WSDL.
+type GetData struct {
+	XMLName xml.Name           `xml:"http://pdf.host.com getData" json:"-" yaml:"-"`
+	Request *DataGenerationReq `xml:"request,omitempty" json:"request,omitempty" yaml:"request,omitempty"`
+}
+
+// GetDataResp was auto-generated from WSDL.
+type GetDataResp struct {
+	Return *DataGenerationResp `xml:"return,omitempty" json:"return,omitempty" yaml:"return,omitempty"`
+}
+
+// dataEndpointPortType implements the DataEndpointPortType interface.
+type dataEndpointPortType struct {
+	cli *soap.Client
+}
+
+// GetData was auto-generated from WSDL.
+func (p *dataEndpointPortType) GetData(α *GetData) (β *GetDataResp, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M GetDataResp `xml:"getDataResp"`
+		}
+	}{}
+	if err = p.cli.RoundTrip(α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
+}
