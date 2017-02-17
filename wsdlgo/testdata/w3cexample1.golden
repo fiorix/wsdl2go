@@ -1,9 +1,8 @@
 package internal
 
 import (
+	"context"
 	"errors"
-
-	"golang.org/x/net/context"
 )
 
 // GetTerm was auto-generated from WSDL.

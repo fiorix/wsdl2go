@@ -2,8 +2,7 @@ package hello_binding
 
 import (
 	"errors"
-
-	"golang.org/x/net/context"
+	"context"
 )
 
 // SayHello was auto-generated from WSDL.

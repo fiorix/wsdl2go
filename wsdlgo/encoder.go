@@ -469,7 +469,7 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 		ok := ge.writeSOAPFunc(w, d, op, in, out, ret, outParams[0].xmlToken)
 		if !ok {
 			ge.needsStdPkg["errors"] = true
-			ge.needsExtPkg["golang.org/x/net/context"] = true
+			ge.needsStdPkg["context"] = true
 			in = append([]string{"ctx context.Context"}, in...)
 			ge.fixParamConflicts(in, out)
 			fn := ge.fixFuncNameConflicts(strings.Title(op.Name))
@@ -503,7 +503,8 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
-	if len(in) != 1 || len(out) != 2 {
+	// TODO: handle other input params: e.g. SOAP headers.
+	if len(in) < 1 || len(out) != 2 {
 		return false
 	}
 	ge.needsStdPkg["encoding/xml"] = true
