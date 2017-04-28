@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"go/parser"
 	"go/token"
@@ -34,6 +35,7 @@ type Encoder interface {
 	// is used when fetching remote parts of WSDL
 	// and WSDL schemas.
 	SetClient(c *http.Client)
+	SetCustomInclude(ci string)
 }
 
 type goEncoder struct {
@@ -68,6 +70,7 @@ type goEncoder struct {
 	needsTag          map[string]bool
 	needsStdPkg       map[string]bool
 	needsExtPkg       map[string]bool
+	customInclude     []string
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
@@ -89,6 +92,10 @@ func NewEncoder(w io.Writer) Encoder {
 
 func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
+}
+
+func (ge *goEncoder) SetCustomInclude(customIncludeString string) {
+	ge.customInclude = strings.Split(customIncludeString, ",")
 }
 
 func gofmtPath() (string, error) {
@@ -160,7 +167,8 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	ge.cacheFuncs(d)
 	ge.cacheMessages(d)
 	ge.cacheSOAPOperations(d)
-	pkg := ge.formatPackageName(d.Binding.Name)
+	pkg := ge.formatPackageName("providers")
+	//pkg := ge.formatPackageName(d.Binding.Name)
 	if pkg == "" {
 		pkg = "internal"
 	}
@@ -253,7 +261,229 @@ func (ge *goEncoder) importRemote(url string, v interface{}) error {
 	return xml.NewDecoder(resp.Body).Decode(v)
 }
 
+func (ge *goEncoder) getChildrenElements(d *wsdl.Definitions, parent string, al *[]string) {
+	for _, v := range d.Schema.Elements {
+		if parent == v.Name {
+			if v.Type == "" && v.ComplexType != nil {
+				ct := *v.ComplexType
+
+				if len(ct.Sequence.Elements) > 0 {
+					for _, el := range ct.Sequence.Elements {
+						if strings.HasPrefix(el.Type, "tns") {
+							newParent := strings.Split(el.Type, ":")[1]
+							ge.getComplexChildren(
+								d,
+								newParent,
+								al,
+							)
+						}
+
+					}
+				}
+			}
+		}
+	}
+}
+
+// getStaticResponseMap is a fix for an everything response body from juniper.
+// Juniper gives a generic static response for many of it's requests
+// we only want to map those responses that actually relate to our custom list
+// of functions we want to include... unfortunately because of this I think
+// we are going to be losing some of our dynamism - hence the following code
+func getStaticResponseMap() (staticResponseMap map[string]bool) {
+	staticResponseMap = make(map[string]bool)
+	staticResponseMap["Errors"] = true
+	staticResponseMap["Warnings"] = true
+	staticResponseMap["HotelStaticData"] = true
+	staticResponseMap["ZoneList"] = true
+	staticResponseMap["HotelList"] = true
+	// and so begins the slow decent into code funk
+	staticResponseMap["HotelContent"] = true
+	staticResponseMap["PackageContent"] = true
+
+	return staticResponseMap
+
+}
+
+func removeUnwantedSequences(s *wsdl.Sequence) {
+	staticResponseMap := getStaticResponseMap()
+	var keys []int
+
+	for k, el := range s.Elements {
+		if !staticResponseMap[el.Name] {
+			// remove
+			keys = append(keys, k)
+		}
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+
+	if len(keys) > 0 {
+		for _, v := range keys {
+			s.Elements[v] = s.Elements[len(s.Elements)-1]
+			s.Elements[len(s.Elements)-1] = nil
+			s.Elements = s.Elements[:len(s.Elements)-1]
+		}
+	}
+}
+
+func (ge *goEncoder) getComplexChildren(d *wsdl.Definitions, parent string, al *[]string) {
+	for _, v := range d.Schema.ComplexTypes {
+		if parent == v.Name {
+			if parent == "JP_StaticDataRS" || parent == "JP_Contents" {
+				// remove sequenced elements that don't apply
+				removeUnwantedSequences(v.Sequence)
+			}
+
+			if v.Sequence != nil && len(v.Sequence.Elements) > 0 {
+				for _, el := range v.Sequence.Elements {
+					if strings.HasPrefix(el.Type, "tns") {
+						newParent := strings.Split(el.Type, ":")[1]
+
+						ge.getComplexChildren(d, newParent, al)
+					}
+				}
+			}
+
+			if v.Attributes != nil && len(v.Attributes) > 0 {
+				for _, a := range v.Attributes {
+					if aType := strings.Split(a.Type, ":"); aType[0] == "tns" {
+						*al = append(*al, aType[1])
+					}
+				}
+			}
+
+			if v.SimpleContent != nil && v.SimpleContent.Extension != nil && len(v.SimpleContent.Extension.Attributes) > 0 {
+				for _, a := range v.SimpleContent.Extension.Attributes {
+					if types := strings.Split(a.Type, ":"); types[0] == "tns" {
+						ge.getComplexChildren(d, types[1], al)
+						// this is to handle a case where SimpleContent is the type
+						// and will never be added due to only searching
+						// ComplexType with this method... it needs done better
+						*al = append(*al, types[1])
+					}
+				}
+			}
+
+			*al = append(*al, v.Name)
+		}
+	}
+}
+
+func (ge *goEncoder) buildAllowable(d *wsdl.Definitions, al *[]string) {
+	for _, include := range ge.customInclude {
+		// need to include name+"Response"
+		*al = append(*al, include+"Response")
+
+		ge.getChildrenElements(d, include, al)
+		ge.getComplexChildren(d, include, al)
+
+		// also need to find allowables for include+"Response"
+		ge.getChildrenElements(d, include+"Response", al)
+		ge.getComplexChildren(d, include+"Response", al)
+	}
+}
+
+func (ge *goEncoder) removeElementNonAllowables(d *wsdl.Definitions, al []string) {
+	delete := make(map[int]struct{})
+	var keys []int
+	for key, v := range d.Schema.Elements {
+		keep := false
+		for _, name := range al {
+			if name == v.Name {
+				keep = true
+			}
+		}
+
+		if _, ok := delete[key]; !keep && !ok {
+			delete[key] = struct{}{}
+			keys = append(keys, key)
+		}
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+
+	if len(delete) > 0 {
+		for _, value := range keys {
+			d.Schema.Elements[value] = d.Schema.Elements[len(d.Schema.Elements)-1]
+			d.Schema.Elements[len(d.Schema.Elements)-1] = nil
+			d.Schema.Elements = d.Schema.Elements[:len(d.Schema.Elements)-1]
+		}
+	}
+}
+
+func (ge *goEncoder) removeComplexNonAllowables(d *wsdl.Definitions, al []string) {
+	delete := make(map[int]struct{})
+	var keys []int
+	for key, v := range d.Schema.ComplexTypes {
+		keep := false
+		for _, name := range al {
+			if name == v.Name {
+				keep = true
+			}
+		}
+
+		if _, ok := delete[key]; !keep && !ok {
+			delete[key] = struct{}{}
+			keys = append(keys, key)
+		}
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+
+	if len(delete) > 0 {
+		for _, value := range keys {
+			d.Schema.ComplexTypes[value] = d.Schema.ComplexTypes[len(d.Schema.ComplexTypes)-1]
+			d.Schema.ComplexTypes[len(d.Schema.ComplexTypes)-1] = nil
+			d.Schema.ComplexTypes = d.Schema.ComplexTypes[:len(d.Schema.ComplexTypes)-1]
+		}
+	}
+}
+
+func (ge *goEncoder) removeSimpleNonAllowables(d *wsdl.Definitions, al []string) {
+	delete := make(map[int]struct{})
+	var keys []int
+	for key, v := range d.Schema.SimpleTypes {
+		keep := false
+		for _, name := range al {
+			if name == v.Name {
+				keep = true
+			}
+		}
+
+		if _, ok := delete[key]; !keep && !ok {
+			delete[key] = struct{}{}
+			keys = append(keys, key)
+		}
+	}
+
+	sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+
+	if len(delete) > 0 {
+		for _, value := range keys {
+			d.Schema.SimpleTypes[value] = d.Schema.SimpleTypes[len(d.Schema.SimpleTypes)-1]
+			d.Schema.SimpleTypes[len(d.Schema.SimpleTypes)-1] = nil
+			d.Schema.SimpleTypes = d.Schema.SimpleTypes[:len(d.Schema.SimpleTypes)-1]
+		}
+	}
+}
+
+func (ge *goEncoder) removeNonAllowables(d *wsdl.Definitions, al []string) {
+	ge.removeElementNonAllowables(d, al)
+	ge.removeComplexNonAllowables(d, al)
+	ge.removeSimpleNonAllowables(d, al)
+}
+
 func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {
+	// build allowable list of types if customInclude is given
+	var allowableList []string
+	if len(ge.customInclude) > 0 {
+		allowableList = ge.customInclude
+		ge.buildAllowable(d, &allowableList)
+		// remove things not in list
+		ge.removeNonAllowables(d, allowableList)
+	}
+
 	// operation types are declared as go struct types
 	for _, v := range d.Schema.Elements {
 		if v.Type == "" && v.ComplexType != nil {
@@ -265,6 +495,7 @@ func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {
 	// simple types map 1:1 to go basic types
 	for _, v := range d.Schema.SimpleTypes {
 		ge.stypes[v.Name] = v
+
 	}
 	// complex types are declared as go struct types
 	for _, v := range d.Schema.ComplexTypes {
@@ -299,7 +530,9 @@ func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
 }
 
 func (ge *goEncoder) cacheElements(ct []*wsdl.Element) {
+
 	for _, el := range ct {
+
 		if el.Name == "" || el.Type == "" {
 			continue
 		}
@@ -321,6 +554,18 @@ func (ge *goEncoder) cacheElements(ct []*wsdl.Element) {
 func (ge *goEncoder) cacheFuncs(d *wsdl.Definitions) {
 	// operations are declared as boilerplate go functions
 	for _, v := range d.PortType.Operations {
+		if len(ge.customInclude) > 0 {
+			keep := false
+			for _, include := range ge.customInclude {
+				if include == v.Name {
+					keep = true
+				}
+			}
+
+			if !keep {
+				continue
+			}
+		}
 		ge.funcs[v.Name] = v
 	}
 	ge.funcnames = make([]string, len(ge.funcs))
@@ -369,6 +614,18 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 	// functions.
 	i := 0
 	for _, fn := range ge.funcnames {
+		if len(ge.customInclude) > 0 {
+			keep := false
+			for _, include := range ge.customInclude {
+				if include == fn {
+					keep = true
+				}
+			}
+
+			if !keep {
+				continue
+			}
+		}
 		op := ge.funcs[fn]
 		if _, exists := ge.soapOps[op.Name]; !exists {
 			// TODO: rpc?
@@ -681,7 +938,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float", "double":
+	case "float", "double", "decimal":
 		return "float64"
 	case "boolean":
 		return "bool"
@@ -763,6 +1020,7 @@ func (ge *goEncoder) renameType(old, name string) {
 func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 	var b bytes.Buffer
 	for _, name := range ge.sortedSimpleTypes() {
+
 		st := ge.stypes[name]
 		if st.Restriction != nil {
 			ge.writeComments(&b, st.Name, "")
@@ -916,7 +1174,14 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		return nil
 	}
 	if c > 2 {
-		fmt.Fprintf(w, "type %s struct {}\n\n", name)
+		if len(ct.Attributes) > 0 || ct.SimpleContent != nil {
+			fmt.Fprintf(w, "type %s struct {\n", name)
+			ge.genAttributes(w, ct)
+			//todo: check new lines
+			fmt.Fprintln(w, "}\n\n")
+		} else {
+			fmt.Fprintf(w, "type %s struct {}\n\n", name)
+		}
 		return nil
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
@@ -937,6 +1202,12 @@ func (ge *goEncoder) genStructFields(w io.Writer, d *wsdl.Definitions, ct *wsdl.
 	if err != nil {
 		return err
 	}
+
+	err = ge.genAttributes(w, ct)
+	if err != nil {
+		return err
+	}
+
 	return ge.genElements(w, ct)
 }
 
@@ -970,6 +1241,29 @@ func (ge *goEncoder) genComplexContent(w io.Writer, d *wsdl.Definitions, ct *wsd
 	return nil
 }
 
+func (ge *goEncoder) genAttributes(w io.Writer, ct *wsdl.ComplexType) error {
+	var attributes []*wsdl.Attribute
+
+	if ct.SimpleContent != nil && ct.SimpleContent.Extension != nil {
+		if len(ct.SimpleContent.Extension.Attributes) > 0 {
+			attributes = ct.SimpleContent.Extension.Attributes
+		} else {
+			return ge.genExtensionField(w, ct)
+		}
+	} else if ct.Attributes != nil {
+		attributes = ct.Attributes
+	} else {
+		return errors.New("attributes expected but not present")
+	}
+
+	for _, a := range attributes {
+		ge.genAttributeField(w, a)
+	}
+
+	return nil
+
+}
+
 func (ge *goEncoder) genElements(w io.Writer, ct *wsdl.ComplexType) error {
 	for _, el := range ct.AllElements {
 		ge.genElementField(w, el)
@@ -980,6 +1274,63 @@ func (ge *goEncoder) genElements(w io.Writer, ct *wsdl.ComplexType) error {
 	for _, el := range ct.Sequence.Elements {
 		ge.genElementField(w, el)
 	}
+	return nil
+}
+
+func (ge *goEncoder) genExtensionField(w io.Writer, c *wsdl.ComplexType) error {
+	e := c.SimpleContent.Extension
+
+	eBase := strings.Split(e.Base, ":")
+	var goEType string
+
+	if eBase[0] == "s" {
+		goEType = ge.wsdl2goType(eBase[1])
+	} else {
+		return errors.New(fmt.Sprintf("unhandled base: ", eBase[0]))
+	}
+
+	name := strings.Split(c.Name, "_")[1]
+
+	_, err := fmt.Fprintf(
+		w,
+		"%s %s `xml:\"%s,omitempty,attr\" json:\"%s,omitempty\"`\n",
+		name,
+		goEType,
+		name,
+		name,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (ge *goEncoder) genAttributeField(w io.Writer, a *wsdl.Attribute) error {
+	aType := strings.Split(a.Type, ":")
+	var goAType string
+
+	if aType[0] == "s" {
+		goAType = ge.wsdl2goType(aType[1])
+	} else if aType[0] == "tns" {
+		goAType = aType[1]
+	}
+
+	_, err := fmt.Fprintf(
+		w,
+		"%s %s `xml:\"%s,omitempty,attr\" json:\"%s,omitempty\"`\n",
+		a.Name,
+		goAType,
+		a.Name,
+		a.Name,
+	)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
