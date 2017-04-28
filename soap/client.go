@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 // A RoundTripper executes a request passing the given req as the SOAP
@@ -42,6 +43,12 @@ type Client struct {
 	ContentType string              // Optional Content-Type (default text/xml)
 	Config      *http.Client        // Optional HTTP client
 	Pre         func(*http.Request) // Optional hook to modify outbound requests
+}
+
+var OutputToStdout = false
+
+func (c *Client) SetOutput(outputToStdout bool) {
+	OutputToStdout = outputToStdout
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -89,6 +96,16 @@ func (c *Client) RoundTrip(in, out Message) error {
 		limReader := io.LimitReader(resp.Body, 1024*1024)
 		body, _ := ioutil.ReadAll(limReader)
 		return fmt.Errorf("%q: %q", resp.Status, body)
+	}
+
+	//OutputToStdout = true
+	// this is useful for debugging requests.  Note that it will cause an error
+	// when decoding for return as the resp.Body has already been read
+	if OutputToStdout {
+		_, err = io.Copy(os.Stdout, resp.Body)
+		if err != nil {
+			fmt.Println("copy error: ", err)
+		}
 	}
 	return xml.NewDecoder(resp.Body).Decode(out)
 }

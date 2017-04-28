@@ -84,7 +84,15 @@ type ComplexType struct {
 	Doc            string          `xml:"annotation>documentation"`
 	AllElements    []*Element      `xml:"all>element"`
 	ComplexContent *ComplexContent `xml:"complexContent"`
+	SimpleContent  *SimpleContent  `xml:"simpleContent"`
 	Sequence       *Sequence       `xml:"sequence"`
+	Attributes     []*Attribute    `xml:"attribute"`
+}
+
+// SimpleContent describes simple content within a complex type.
+type SimpleContent struct {
+	XMLName   xml.Name   `xml:"simpleContent"`
+	Extension *Extension `xml:"extension"`
 }
 
 // ComplexContent describes complex content within a complex type. Usually
@@ -96,9 +104,10 @@ type ComplexContent struct {
 
 // Extension describes a complex content extension.
 type Extension struct {
-	XMLName  xml.Name  `xml:"extension"`
-	Base     string    `xml:"base,attr"`
-	Sequence *Sequence `xml:"sequence"`
+	XMLName    xml.Name     `xml:"extension"`
+	Base       string       `xml:"base,attr"`
+	Sequence   *Sequence    `xml:"sequence"`
+	Attributes []*Attribute `xml:"attribute"`
 }
 
 // Sequence describes a list of elements (parameters) of a type.
@@ -107,6 +116,13 @@ type Sequence struct {
 	ComplexTypes []*ComplexType `xml:"complexType"`
 	Elements     []*Element     `xml:"element"`
 	Any          []*AnyElement  `xml:"any"`
+}
+
+// Attribute describes an attribute of a complext type.
+type Attribute struct {
+	XMLName xml.Name `xml:"attribute"`
+	Name    string   `xml:"name,attr"`
+	Type    string   `xml:"type,attr"`
 }
 
 // Element describes an element of a given type.
