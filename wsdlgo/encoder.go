@@ -677,12 +677,17 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return v
 	}
 	switch strings.ToLower(v) {
-	case "int":
+	case "int", "integer":
 		return "int"
 	case "long":
 		return "int64"
 	case "float", "double":
 		return "float64"
+	case "decimal":
+		// big.Float works well enough with XML serialization,
+		// but falls short for JSON and YAML--may need a custom type to wrap this
+		ge.needsStdPkg["math/big"] = true
+		return "big.Float"
 	case "boolean":
 		return "bool"
 	case "hexbinary", "base64binary":
@@ -723,6 +728,8 @@ func (ge *goEncoder) wsdl2goDefault(t string) string {
 		return "false"
 	case "int", "int64", "float64":
 		return "0"
+	case "big.Float":
+		return "big.Float{}"
 	case "string":
 		return `""`
 	case "[]byte":
