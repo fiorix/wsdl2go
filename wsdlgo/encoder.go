@@ -681,7 +681,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float", "double":
+	case "float", "double", "decimal":
 		return "float64"
 	case "boolean":
 		return "bool"
