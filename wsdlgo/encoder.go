@@ -455,7 +455,6 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 		if err != nil {
 			return err
 		}
-		ret := make([]string, len(outParams))
 		fixParamConflicts(inParams, outParams)
 		ok := ge.writeSOAPFunc(w, d, op, inParams, outParams, op.Name)
 		if !ok {
@@ -464,14 +463,10 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 			ge.needsStdPkg["context"] = true
 			inParams = append([]*parameter{&parameter{Name: "ctx", Type: "context.Context"}}, inParams...)
 			fn := ge.fixFuncNameConflicts(strings.Title(op.Name))
-			for i, p := range outParams {
-				ret[i] = p.goDefault()
-			}
-			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn %s\n}\n\n",
+			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn\n}\n\n",
 				fn,
 				asGoParamsString(inParams),
 				asGoParamsString(outParams),
-				strings.Join(ret, ", "),
 			)
 		}
 	}
@@ -571,6 +566,7 @@ func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]*parameter, error) {
 	var parts []*wsdl.Part
 	if len(op.ParameterOrder) != 0 {
 		order := strings.Split(op.ParameterOrder, " ")
+		parts = make([]*wsdl.Part, len(order))
 
 		// Use a map to run O( len(parts)+len(order) )
 		partLookup := map[string]*wsdl.Part{}
@@ -642,29 +638,6 @@ func (p parameter) asGo() string {
 	return c
 }
 
-func (p parameter) goDefault() string {
-	v := trimns(p.Type)
-	if v != "" && v[0] == '*' {
-		v = v[1:]
-	}
-	switch v {
-	case "error":
-		return `errors.New("not implemented")`
-	case "bool":
-		return "false"
-	case "int", "int64", "float64":
-		return "0"
-	case "big.Float":
-		return "big.Float{}"
-	case "string":
-		return `""`
-	case "[]byte":
-		return "nil"
-	default:
-		return "&" + v + "{}"
-	}
-}
-
 func asGoParamsString(params []*parameter) string {
 	goP := make([]string, len(params))
 	for i, p := range params {
@@ -676,14 +649,12 @@ func asGoParamsString(params []*parameter) string {
 func (ge *goEncoder) genParams(parts []*wsdl.Part, needsTag bool) []*parameter {
 	params := make([]*parameter, len(parts))
 	for i, part := range parts {
-		var t, token string
+		var t string
 		switch {
 		case part.Type != "":
 			t = ge.wsdl2goType(part.Type)
-			token = t
 		case part.Element != "":
 			t = ge.wsdl2goType(part.Element)
-			token = trimns(part.Element)
 		}
 		// Go fields and variable names generate fewer warnings with "ID" instead of "Id"
 		name := regexp.MustCompile("(.*)Id$").ReplaceAllString(part.Name, "${1}ID")
