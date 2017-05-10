@@ -56,7 +56,7 @@ type goEncoder struct {
 	funcnames []string
 
 	// messages cache
-	messages map[string]*wsdl.Message // method input and  output (request/respoinse)
+	messages map[string]*wsdl.Message
 
 	// soap operations cache
 	soapOps map[string]*wsdl.BindingOperation
@@ -550,7 +550,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
 		strings.Title(op.Name),
 		inParams,
-		soapAction, // TODO -- stick this into inParams above
+		soapAction,
 		outParams,
 		messageName,
 	})
@@ -632,10 +632,9 @@ var isGoKeyword = map[string]bool{
 }
 
 type parameter struct {
-	Name     string
-	Type     string
-	XMLName  string
-	XMLToken string
+	Name    string
+	Type    string
+	XMLName string
 }
 
 func (p parameter) asGo() string {
@@ -693,10 +692,9 @@ func (ge *goEncoder) genParams(parts []*wsdl.Part, needsTag bool) []*parameter {
 			name = "_" + name
 		}
 		params[i] = &parameter{
-			Name:     name,
-			Type:     t,
-			XMLName:  part.Name,
-			XMLToken: token,
+			Name:    name,
+			Type:    t,
+			XMLName: part.Name,
 		}
 		if needsTag {
 			ge.needsTag[strings.TrimPrefix(t, "*")] = true
