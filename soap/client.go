@@ -45,7 +45,7 @@ type Client struct {
 }
 
 // RoundTrip implements the RoundTripper interface.
-func (c *Client) RoundTrip(in, out Message) error {
+func (c *Client) RoundTrip(in, out Message, soapAction string) error {
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
@@ -79,6 +79,9 @@ func (c *Client) RoundTrip(in, out Message) error {
 	if c.Pre != nil {
 		c.Pre(r)
 	}
+
+	r.Header.Set("SOAPAction", soapAction)
+
 	resp, err := cli.Do(r)
 	if err != nil {
 		return err

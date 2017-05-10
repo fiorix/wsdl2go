@@ -2,7 +2,11 @@ package wsdl
 
 // TODO: Add all types from the spec.
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"fmt"
+	"strings"
+)
 
 // Definitions is the root element of a WSDL document.
 type Definitions struct {
@@ -62,12 +66,54 @@ type Union struct {
 	MemberTypes string   `xml:"memberTypes,attr"`
 }
 
-// Restriction describes the WSDL type of the simple type and
+// Attribute is a "meta" WSDL element it belongs to a Restriction and marks a an arbitrary value with its key "ref"
+// Only a monster chooses to give an XML Element the name "Attribute", but there you have it
+type Attribute struct {
+	XMLName xml.Name `xml:"attribute"`
+	Ref     string   `xml:"ref,attr"`
+	Key     string
+	Value   string
+}
+
+func (a *Attribute) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	*a = Attribute{}
+	a.XMLName = start.Name
+
+	// Find the ref key and map it
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "ref" {
+			a.Ref = attr.Value
+			// Pull off all the namespoacing for Key--it will be a mismatch on the XML attribute we want
+			split := strings.Split(attr.Value, ":")
+			a.Key = split[len(split)-1] // last split element
+			break
+		}
+	}
+
+	// Custom unmarashlling failed to find attribute "ref", return regular decoding
+	if len(a.Key) == 0 {
+		return fmt.Errorf("No ref cound")
+	}
+
+	for _, attr := range start.Attr {
+		if attr.Name.Local == a.Key {
+			a.Value = attr.Value
+			break
+		}
+	}
+
+	// Mark element as skipped for decoder so it can get on with it's life
+	err := d.Skip()
+	return err
+}
+
+// Restriction describes the WSDL type of the simple or complex content type and
 // optionally its allowed values.
 type Restriction struct {
-	XMLName xml.Name `xml:"restriction"`
-	Base    string   `xml:"base,attr"`
-	Enum    []*Enum  `xml:"enumeration"`
+	XMLName   xml.Name   `xml:"restriction"`
+	Base      string     `xml:"base,attr"`
+	Enum      []*Enum    `xml:"enumeration"`
+	Attribute *Attribute `xml:"attribute"`
 }
 
 // Enum describes one possible value for a Restriction.
@@ -90,8 +136,9 @@ type ComplexType struct {
 // ComplexContent describes complex content within a complex type. Usually
 // for extending the complex type with fields from the complex content.
 type ComplexContent struct {
-	XMLName   xml.Name   `xml:"complexContent"`
-	Extension *Extension `xml:"extension"`
+	XMLName     xml.Name     `xml:"complexContent"`
+	Extension   *Extension   `xml:"extension"`
+	Restriction *Restriction `xml:"restriction"`
 }
 
 // Extension describes a complex content extension.
@@ -167,11 +214,12 @@ type PortType struct {
 
 // Operation describes an operation.
 type Operation struct {
-	XMLName xml.Name `xml:"operation"`
-	Name    string   `xml:"name,attr"`
-	Doc     string   `xml:"documentation"`
-	Input   *IO      `xml:"input"`
-	Output  *IO      `xml:"output"`
+	XMLName        xml.Name `xml:"operation"`
+	Name           string   `xml:"name,attr"`
+	ParameterOrder string   `xml:"parameterOrder,attr,omitempty"`
+	Doc            string   `xml:"documentation"`
+	Input          *IO      `xml:"input"`
+	Output         *IO      `xml:"output"`
 }
 
 // IO describes which message is linked to an operation, for input
@@ -192,10 +240,16 @@ type Binding struct {
 // BindingOperation describes the requirement for binding SOAP to WSDL
 // operations.
 type BindingOperation struct {
-	XMLName xml.Name   `xml:"operation"`
-	Name    string     `xml:"name,attr"`
-	Input   *BindingIO `xml:"input>body"`
-	Output  *BindingIO `xml:"output>body"`
+	XMLName   xml.Name       `xml:"operation"`
+	Name      string         `xml:"name,attr"`
+	Operation *SoapOperation `xml:"operation"`
+	Input     *BindingIO     `xml:"input>body"`
+	Output    *BindingIO     `xml:"output>body"`
+}
+
+// A number of SOAP servers do additional routing via this header
+type SoapOperation struct {
+	SoapAction string `xml:"soapAction,attr"`
 }
 
 // BindingIO describes the IO binding of SOAP operations. See IO for details.
