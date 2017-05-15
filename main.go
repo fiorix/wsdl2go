@@ -12,6 +12,7 @@ import (
 
 	"github.com/fiorix/wsdl2go/wsdl"
 	"github.com/fiorix/wsdl2go/wsdlgo"
+	"path/filepath"
 )
 
 var version = "tip"
@@ -59,17 +60,26 @@ func main() {
 func decode(w io.Writer, src string, cli *http.Client) error {
 	var err error
 	var f io.ReadCloser
+	var filePath string
 	if src == "" || src == "-" {
 		f = os.Stdin
-	} else if f, err = open(src, cli); err != nil {
-		return err
+	} else {
+		f, err = open(src, cli)
+		if err != nil {
+			return err
+		}
+		filePath = filepath.Dir(src)
+		if err != nil {
+			return err
+		}
 	}
+	log.Println("filePath", filePath)
 	d, err := wsdl.Unmarshal(f)
 	if err != nil {
 		return err
 	}
 	f.Close()
-	enc := wsdlgo.NewEncoder(w)
+	enc := wsdlgo.NewEncoder(w, filePath)
 	enc.SetClient(cli)
 	return enc.Encode(d)
 }

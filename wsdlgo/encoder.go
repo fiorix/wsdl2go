@@ -14,6 +14,7 @@ import (
 	"go/token"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,6 +40,9 @@ type Encoder interface {
 type goEncoder struct {
 	// where to write Go code
 	w io.Writer
+
+	// root file absolute path
+	rootFileAbsolutePath string
 
 	// http client
 	http *http.Client
@@ -71,19 +75,20 @@ type goEncoder struct {
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
-func NewEncoder(w io.Writer) Encoder {
+func NewEncoder(w io.Writer, rootFileAbsolutePath string) Encoder {
 	return &goEncoder{
-		w:           w,
-		http:        http.DefaultClient,
-		stypes:      make(map[string]*wsdl.SimpleType),
-		ctypes:      make(map[string]*wsdl.ComplexType),
-		elements:    make(map[string]*wsdl.Element),
-		funcs:       make(map[string]*wsdl.Operation),
-		messages:    make(map[string]*wsdl.Message),
-		soapOps:     make(map[string]*wsdl.BindingOperation),
-		needsTag:    make(map[string]bool),
-		needsStdPkg: make(map[string]bool),
-		needsExtPkg: make(map[string]bool),
+		w:                    w,
+		http:                 http.DefaultClient,
+		rootFileAbsolutePath: rootFileAbsolutePath,
+		stypes:               make(map[string]*wsdl.SimpleType),
+		ctypes:               make(map[string]*wsdl.ComplexType),
+		elements:             make(map[string]*wsdl.Element),
+		funcs:                make(map[string]*wsdl.Operation),
+		messages:             make(map[string]*wsdl.Message),
+		soapOps:              make(map[string]*wsdl.BindingOperation),
+		needsTag:             make(map[string]bool),
+		needsStdPkg:          make(map[string]bool),
+		needsExtPkg:          make(map[string]bool),
 	}
 }
 
@@ -244,8 +249,18 @@ func (ge *goEncoder) importSchema(d *wsdl.Definitions) error {
 }
 
 // download xml from url, decode in v.
-func (ge *goEncoder) importRemote(url string, v interface{}) error {
-	resp, err := ge.http.Get(url)
+func (ge *goEncoder) importRemote(name string, v interface{}) error {
+	u, err := url.Parse(name)
+	if err != nil || u.Scheme == "" {
+		file, err := os.Open(filepath.Join(ge.rootFileAbsolutePath, name))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		return xml.NewDecoder(file).Decode(v)
+	}
+
+	resp, err := ge.http.Get(name)
 	if err != nil {
 		return err
 	}
