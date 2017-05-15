@@ -73,7 +73,6 @@ func decode(w io.Writer, src string, cli *http.Client) error {
 			return err
 		}
 	}
-	log.Println("filePath", filePath)
 	d, err := wsdl.Unmarshal(f)
 	if err != nil {
 		return err
