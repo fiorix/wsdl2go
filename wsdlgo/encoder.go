@@ -677,7 +677,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return v
 	}
 	switch strings.ToLower(v) {
-	case "int":
+	case "int", "integer":
 		return "int"
 	case "long":
 		return "int64"
@@ -703,7 +703,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 	case "duration":
 		ge.needsDurationType = true
 		return "Duration"
-	case "anysequence":
+	case "anysequence", "anytype", "anysimpletype":
 		return "interface{}"
 	default:
 		return "*" + strings.Title(strings.Replace(v, ".", "", -1))
@@ -894,9 +894,6 @@ func (ge *goEncoder) genValidator(w io.Writer, typeName string, r *wsdl.Restrict
 }
 
 func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
-	if ct.Abstract {
-		return nil
-	}
 	c := 0
 	if len(ct.AllElements) == 0 {
 		c++
@@ -911,6 +908,10 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	}
 	name := strings.Title(ct.Name)
 	ge.writeComments(w, name, ct.Doc)
+	if ct.Abstract {
+		fmt.Fprintf(w, "type %s interface{}\n\n", name)
+		return nil
+	}
 	if ct.Sequence != nil && ct.Sequence.Any != nil {
 		fmt.Fprintf(w, "type %s []interface{}\n\n", name)
 		return nil
