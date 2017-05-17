@@ -41,8 +41,8 @@ type goEncoder struct {
 	// where to write Go code
 	w io.Writer
 
-	// root file absolute path
-	rootFileAbsolutePath string
+	// dir of a root file
+	dir string
 
 	// http client
 	http *http.Client
@@ -75,20 +75,39 @@ type goEncoder struct {
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
-func NewEncoder(w io.Writer, rootFileAbsolutePath string) Encoder {
-	return &goEncoder{
-		w:                    w,
-		http:                 http.DefaultClient,
-		rootFileAbsolutePath: rootFileAbsolutePath,
-		stypes:               make(map[string]*wsdl.SimpleType),
-		ctypes:               make(map[string]*wsdl.ComplexType),
-		elements:             make(map[string]*wsdl.Element),
-		funcs:                make(map[string]*wsdl.Operation),
-		messages:             make(map[string]*wsdl.Message),
-		soapOps:              make(map[string]*wsdl.BindingOperation),
-		needsTag:             make(map[string]bool),
-		needsStdPkg:          make(map[string]bool),
-		needsExtPkg:          make(map[string]bool),
+func NewEncoder(w io.Writer, opts ...Option) Encoder {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic("Can't receive current dir")
+	}
+
+	enc := &goEncoder{
+		w:           w,
+		dir:         dir,
+		http:        http.DefaultClient,
+		stypes:      make(map[string]*wsdl.SimpleType),
+		ctypes:      make(map[string]*wsdl.ComplexType),
+		elements:    make(map[string]*wsdl.Element),
+		funcs:       make(map[string]*wsdl.Operation),
+		messages:    make(map[string]*wsdl.Message),
+		soapOps:     make(map[string]*wsdl.BindingOperation),
+		needsTag:    make(map[string]bool),
+		needsStdPkg: make(map[string]bool),
+		needsExtPkg: make(map[string]bool),
+	}
+
+	for _, opt := range opts {
+		opt(enc)
+	}
+
+	return enc
+}
+
+type Option func(*goEncoder)
+
+func WithRootDir(dir string) Option {
+	return func(ge *goEncoder) {
+		ge.dir = dir
 	}
 }
 
@@ -252,7 +271,7 @@ func (ge *goEncoder) importSchema(d *wsdl.Definitions) error {
 func (ge *goEncoder) importRemote(name string, v interface{}) error {
 	u, err := url.Parse(name)
 	if err != nil || u.Scheme == "" {
-		file, err := os.Open(filepath.Join(ge.rootFileAbsolutePath, name))
+		file, err := os.Open(filepath.Join(ge.dir, name))
 		if err != nil {
 			return err
 		}

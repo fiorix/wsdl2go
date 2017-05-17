@@ -1,7 +1,7 @@
 <definitions>
     <types>
         <schema>
-            <import namespace="http://localhost:9999" schemaLocation="importer-local-child.wsdl"></import>
+            <import namespace="http://localhost:9999" schemaLocation="subdir/importer-local-child.wsdl"></import>
         </schema>
     </types>
 

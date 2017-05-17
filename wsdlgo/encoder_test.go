@@ -17,7 +17,7 @@ import (
 )
 
 func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions {
-	f, err := os.Open(GetDefinitionFilePath(filename))
+	f, err := os.Open(filepath.Join("testdata", filename))
 	if err != nil {
 		t.Errorf("missing wsdl file %q: %v", filename, err)
 	}
@@ -27,10 +27,6 @@ func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions
 		t.Errorf("%q failed: want %v, have %v", filename, want, err)
 	}
 	return d
-}
-
-func GetDefinitionFilePath(filename string) string {
-	return filepath.Join("testdata", filename)
 }
 
 var EncoderCases = []struct {
@@ -72,7 +68,11 @@ func TestEncoder(t *testing.T) {
 		var want []byte
 		var have bytes.Buffer
 
-		err = NewEncoder(&have, GetDefinitionFilePath(filepath.Dir(tc.F))).Encode(d)
+		dir, err := os.Getwd()
+		if err != nil {
+			t.Error(err)
+		}
+		err = NewEncoder(&have, WithRootDir(filepath.Join(dir, "testdata"))).Encode(d)
 		if err != nil {
 			t.Errorf("test %d, encoding %q: %v", i, tc.F, err)
 		}
