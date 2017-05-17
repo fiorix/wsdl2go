@@ -14,6 +14,7 @@ import (
 	"go/token"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,6 +40,9 @@ type Encoder interface {
 type goEncoder struct {
 	// where to write Go code
 	w io.Writer
+
+	// dir of a root file
+	dir string
 
 	// http client
 	http *http.Client
@@ -71,9 +75,15 @@ type goEncoder struct {
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
-func NewEncoder(w io.Writer) Encoder {
-	return &goEncoder{
+func NewEncoder(w io.Writer, opts ...Option) Encoder {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic("Can't receive current dir")
+	}
+
+	enc := &goEncoder{
 		w:           w,
+		dir:         dir,
 		http:        http.DefaultClient,
 		stypes:      make(map[string]*wsdl.SimpleType),
 		ctypes:      make(map[string]*wsdl.ComplexType),
@@ -84,6 +94,20 @@ func NewEncoder(w io.Writer) Encoder {
 		needsTag:    make(map[string]bool),
 		needsStdPkg: make(map[string]bool),
 		needsExtPkg: make(map[string]bool),
+	}
+
+	for _, opt := range opts {
+		opt(enc)
+	}
+
+	return enc
+}
+
+type Option func(*goEncoder)
+
+func WithRootDir(dir string) Option {
+	return func(ge *goEncoder) {
+		ge.dir = dir
 	}
 }
 
@@ -244,8 +268,18 @@ func (ge *goEncoder) importSchema(d *wsdl.Definitions) error {
 }
 
 // download xml from url, decode in v.
-func (ge *goEncoder) importRemote(url string, v interface{}) error {
-	resp, err := ge.http.Get(url)
+func (ge *goEncoder) importRemote(name string, v interface{}) error {
+	u, err := url.Parse(name)
+	if err != nil || u.Scheme == "" {
+		file, err := os.Open(filepath.Join(ge.dir, name))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		return xml.NewDecoder(file).Decode(v)
+	}
+
+	resp, err := ge.http.Get(name)
 	if err != nil {
 		return err
 	}

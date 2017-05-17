@@ -41,6 +41,7 @@ var EncoderCases = []struct {
 	{F: "w3example2.wsdl", G: "w3example2.golden", E: nil},
 	{F: "memcache.wsdl", G: "memcache.golden", E: nil},
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
+	{F: "importer-local-root.wsdl", G: "importer-local.golden", E: nil},
 	{F: "data.wsdl", G: "data.golden", E: nil},
 }
 
@@ -66,7 +67,12 @@ func TestEncoder(t *testing.T) {
 		var err error
 		var want []byte
 		var have bytes.Buffer
-		err = NewEncoder(&have).Encode(d)
+
+		dir, err := os.Getwd()
+		if err != nil {
+			t.Error(err)
+		}
+		err = NewEncoder(&have, WithRootDir(filepath.Join(dir, "testdata"))).Encode(d)
 		if err != nil {
 			t.Errorf("test %d, encoding %q: %v", i, tc.F, err)
 		}
