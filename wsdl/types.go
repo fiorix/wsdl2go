@@ -66,17 +66,16 @@ type Union struct {
 	MemberTypes string   `xml:"memberTypes,attr"`
 }
 
-// Attribute is a "meta" WSDL element it belongs to a Restriction and marks a an arbitrary value with its key "ref"
-// Only a monster chooses to give an XML Element the name "Attribute", but there you have it
-type Attribute struct {
+// RestrictionAttr is a "meta" WSDL element it belongs to a Restriction and marks a an arbitrary value with its key "ref"
+type RestrictionAttr struct {
 	XMLName xml.Name `xml:"attribute"`
 	Ref     string   `xml:"ref,attr"`
 	Key     string
 	Value   string
 }
 
-func (a *Attribute) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	*a = Attribute{}
+func (a *RestrictionAttr) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	*a = RestrictionAttr{}
 	a.XMLName = start.Name
 
 	// Find the ref key and map it
@@ -110,10 +109,10 @@ func (a *Attribute) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 // Restriction describes the WSDL type of the simple or complex content type and
 // optionally its allowed values.
 type Restriction struct {
-	XMLName   xml.Name   `xml:"restriction"`
-	Base      string     `xml:"base,attr"`
-	Enum      []*Enum    `xml:"enumeration"`
-	Attribute *Attribute `xml:"attribute"`
+	XMLName   xml.Name         `xml:"restriction"`
+	Base      string           `xml:"base,attr"`
+	Enum      []*Enum          `xml:"enumeration"`
+	Attribute *RestrictionAttr `xml:"attribute"`
 }
 
 // Enum describes one possible value for a Restriction.

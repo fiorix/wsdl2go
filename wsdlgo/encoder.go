@@ -508,7 +508,9 @@ func (p *{{.PortType}}) {{.Name}}( {{functionParamString .InParams}}) ({{functio
 		}
 	}{}
 	
-	if err = p.cli.RoundTrip(message, &out, "{{.SoapAction}}"); err != nil {
+	// simple context to pass SOAPAction--later versions to offer better call control
+	ctx := context.WithValue( context.Background(), "SOAPAction", "{{.SoapAction}}" )
+	if err = p.cli.RoundTrip(ctx, message, &out); err != nil {
 		return
 	}
 
@@ -526,6 +528,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
+	ge.needsStdPkg["context"] = true
 	ge.needsStdPkg["encoding/xml"] = true
 	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
 
@@ -646,6 +649,28 @@ func asGoParamsString(params []*parameter) string {
 	return strings.Join(goP, ", ")
 }
 
+func scrubName(unscrubbed string) (name string) {
+
+	name = unscrubbed
+
+	// Golint wants fields and variable names with "ID" instead of "Id"
+	idFinder := regexp.MustCompile("(.*)Id$")
+	name = idFinder.ReplaceAllString(name, "${1}ID")
+
+	// Golint doesn't want fields and variable names with "_" anywhere--remove mid-word matches,
+	underscoreFinder := regexp.MustCompile("(.+)_(.+)")
+	name = underscoreFinder.ReplaceAllString(name, "${1}${2}")
+	// replace edge underscores with "Var"-- set n as 2 because there are maximum 2 edge cases
+	name = strings.Replace(name, "_", "Var", 2)
+
+	// Because other languages just don't care
+	if isGoKeyword[name] {
+		name = unscrubbed + unscrubbed
+	}
+
+	return name
+}
+
 func (ge *goEncoder) genParams(parts []*wsdl.Part, needsTag bool) []*parameter {
 	params := make([]*parameter, len(parts))
 	for i, part := range parts {
@@ -656,12 +681,9 @@ func (ge *goEncoder) genParams(parts []*wsdl.Part, needsTag bool) []*parameter {
 		case part.Element != "":
 			t = ge.wsdl2goType(part.Element)
 		}
-		// Go fields and variable names generate fewer warnings with "ID" instead of "Id"
-		name := regexp.MustCompile("(.*)Id$").ReplaceAllString(part.Name, "${1}ID")
 
-		if isGoKeyword[name] {
-			name = "_" + name
-		}
+		name := scrubName(part.Name)
+
 		params[i] = &parameter{
 			Name:    name,
 			Type:    t,
@@ -770,7 +792,7 @@ func (ge *goEncoder) writeGoTypes(w io.Writer, d *wsdl.Definitions) error {
 		st := ge.stypes[name]
 		if st.Restriction != nil {
 			writeComments(&b, st.Name, "")
-			fmt.Fprintf(&b, "type %s %s\n\n", st.Name, ge.wsdl2goType(st.Restriction.Base))
+			fmt.Fprintf(&b, "type %s %s\n\n", scrubName(st.Name), ge.wsdl2goType(st.Restriction.Base))
 			ge.genValidator(&b, st.Name, st.Restriction)
 		} else if st.Union != nil {
 			types := strings.Split(st.Union.MemberTypes, " ")
@@ -1035,9 +1057,7 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		}
 	}
 	tag := el.Name
-
-	// Titlecase the name, then fix Go lint warning when using "Id" instead of "ID"
-	name := regexp.MustCompile("(.*)Id$").ReplaceAllString(strings.Title(el.Name), "${1}ID")
+	name := scrubName(strings.Title(el.Name))
 	fmt.Fprintf(w, "%s ", name)
 	if el.Max != "" && el.Max != "1" {
 		fmt.Fprintf(w, "[]")
