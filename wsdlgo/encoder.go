@@ -69,10 +69,14 @@ type goEncoder struct {
 	needsTag          map[string]bool
 	needsStdPkg       map[string]bool
 	needsExtPkg       map[string]bool
+
+	// flags that control what kind of code to generate
+	genGo   bool // original go code
+	genMock bool // mocks for original go code
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
-func NewEncoder(w io.Writer) Encoder {
+func NewEncoder(w io.Writer, genGo, genMock bool) Encoder {
 	return &goEncoder{
 		w:           w,
 		http:        http.DefaultClient,
@@ -85,6 +89,8 @@ func NewEncoder(w io.Writer) Encoder {
 		needsTag:    make(map[string]bool),
 		needsStdPkg: make(map[string]bool),
 		needsExtPkg: make(map[string]bool),
+		genGo:       genGo,
+		genMock:     genMock,
 	}
 }
 
@@ -168,12 +174,22 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	var b bytes.Buffer
 	var ff []func(io.Writer, *wsdl.Definitions) error
 	if len(ge.soapOps) > 0 {
-		ff = append(ff,
-			ge.writeInterfaceFuncs,
-			ge.writeGoTypes,
-			ge.writePortType,
-			ge.writeGoFuncs,
-		)
+		if ge.genGo {
+			ff = append(ff,
+				ge.writeNamespace,
+				ge.writeInterfaceFuncs,
+				ge.writeGoTypes,
+				ge.writePortType,
+				ge.writeGoFuncs,
+			)
+		}
+		if ge.genMock {
+			ff = append(ff,
+				ge.writeMockPortType,
+				ge.writeMockFuncs,
+			)
+		}
+
 	} else {
 		// this is rpc; meh
 		ff = append(ff,
@@ -198,12 +214,16 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 		fmt.Fprintf(w, "%q\n", pkg)
 	}
 	fmt.Fprintf(w, ")\n\n")
+	_, err = io.Copy(w, &b)
+	return err
+}
+
+func (ge *goEncoder) writeNamespace(w io.Writer, d *wsdl.Definitions) error {
 	if d.TargetNamespace != "" {
 		writeComments(w, "Namespace", "")
 		fmt.Fprintf(w, "var Namespace = %q\n\n", d.TargetNamespace)
 	}
-	_, err = io.Copy(w, &b)
-	return err
+	return nil
 }
 
 func (ge *goEncoder) formatPackageName(pkg string) string {
@@ -408,6 +428,31 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 	})
 }
 
+var mockPortTypeT = template.Must(template.New("portType").Parse(`
+// Mock{{.Interface}} implements the {{.Interface}} interface and can be used to moke the service
+// but will not be abstracted here so the mock functions are easily accessible to tests
+type Mock{{.Interface}} struct {
+	mock.Mock
+}
+
+// Allocate no memory, but have compiler enforce interface implementation
+var _ {{.Interface}} = Mock{{.Interface}}{}
+`))
+
+func (ge *goEncoder) writeMockPortType(w io.Writer, d *wsdl.Definitions) error {
+	if len(ge.funcs) == 0 {
+		return nil
+	}
+
+	ge.needsExtPkg["github.com/maraino/go-mock"] = true
+	n := d.PortType.Name
+	return mockPortTypeT.Execute(w, &struct {
+		Interface string
+	}{
+		strings.Title(n),
+	})
+}
+
 var portTypeT = template.Must(template.New("portType").Parse(`
 // {{.Name}} implements the {{.Interface}} interface.
 type {{.Name}} struct {
@@ -430,9 +475,19 @@ func (ge *goEncoder) writePortType(w io.Writer, d *wsdl.Definitions) error {
 	})
 }
 
+// writeMockFuncs writes Mock function definitions from WSDL types to w.
+// Functions are written in the same order of the WSDL document.
+func (ge *goEncoder) writeMockFuncs(w io.Writer, d *wsdl.Definitions) error {
+	return ge.writeFuncs(w, d, true)
+}
+
 // writeGoFuncs writes Go function definitions from WSDL types to w.
 // Functions are written in the same order of the WSDL document.
 func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
+	return ge.writeFuncs(w, d, false)
+}
+
+func (ge *goEncoder) writeFuncs(w io.Writer, d *wsdl.Definitions, mockFuncs bool) error {
 	if d.Binding.Type != "" {
 		a, b := trimns(d.Binding.Type), trimns(d.PortType.Name)
 		if a != b {
@@ -456,21 +511,71 @@ func (ge *goEncoder) writeGoFuncs(w io.Writer, d *wsdl.Definitions) error {
 			return err
 		}
 		fixParamConflicts(inParams, outParams)
-		ok := ge.writeSOAPFunc(w, d, op, inParams, outParams, op.Name)
-		if !ok {
-			writeComments(w, op.Name, op.Doc)
-			ge.needsStdPkg["errors"] = true
-			ge.needsStdPkg["context"] = true
-			inParams = append([]*parameter{&parameter{Name: "ctx", Type: "context.Context"}}, inParams...)
-			fn := ge.fixFuncNameConflicts(strings.Title(op.Name))
-			fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn\n}\n\n",
-				fn,
-				asGoParamsString(inParams),
-				asGoParamsString(outParams),
-			)
+
+		if mockFuncs {
+			ge.writeMockFunc(w, d, op, inParams, outParams)
+		} else {
+			ok := ge.writeSOAPFunc(w, d, op, inParams, outParams)
+			if !ok {
+				writeComments(w, op.Name, op.Doc)
+				ge.needsStdPkg["errors"] = true
+				ge.needsStdPkg["context"] = true
+				inParams = append([]*parameter{&parameter{Name: "ctx", Type: "context.Context"}}, inParams...)
+				fn := ge.fixFuncNameConflicts(strings.Title(op.Name))
+				fmt.Fprintf(w, "func %s(%s) (%s) {\nreturn\n}\n\n",
+					fn,
+					asGoParamsString(inParams),
+					asGoParamsString(outParams),
+				)
+			}
 		}
 	}
 	return nil
+}
+
+var mockFuncT = template.Must(template.New("mockFunc").Funcs(template.FuncMap{
+	"functionParamString": func(params []*parameter) string {
+		return asGoParamsString(params)
+	},
+	"passingParamString": func(params []*parameter) string {
+		callP := make([]string, len(params))
+		for i, p := range params {
+			callP[i] = p.Name
+		}
+		return strings.Join(callP, ", ")
+	},
+}).Parse(`
+// {{.Name}} was was auto-generated from WSDL
+func (m Mock{{.Interface}}) {{.Name}}( {{functionParamString .InParams}}) ({{functionParamString .OutParams}}) {
+	result := m.Called( {{passingParamString .InParams}} )
+{{- range $i, $param := .OutParams }}
+{{- 	if ne $param.Name "err" }}
+		{{$param.Name}} = result.Get( {{$i}} ).( {{$param.Type}} )
+{{- 	else }}
+		{{$param.Name}} = result.Error( {{$i}} )
+{{- 	end }}
+{{- end }}
+	return
+}
+`))
+
+func (ge *goEncoder) writeMockFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, inParams, outParams []*parameter) bool {
+	if _, exists := ge.soapOps[op.Name]; !exists {
+		return false
+	}
+
+	mockFuncT.Execute(w, &struct {
+		Interface string
+		Name      string
+		InParams  []*parameter
+		OutParams []*parameter
+	}{
+		strings.Title(d.PortType.Name),
+		strings.Title(op.Name),
+		inParams,
+		outParams,
+	})
+	return true
 }
 
 var soapFuncT = template.Must(template.New("soapFunc").Funcs(template.FuncMap{
@@ -524,7 +629,7 @@ func (p *{{.PortType}}) {{.Name}}( {{functionParamString .InParams}}) ({{functio
 }
 `))
 
-func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, inParams, outParams []*parameter, messageName string) bool {
+func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Operation, inParams, outParams []*parameter) bool {
 	if _, exists := ge.soapOps[op.Name]; !exists {
 		return false
 	}
@@ -550,7 +655,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		inParams,
 		soapAction,
 		outParams,
-		messageName,
+		op.Name,
 	})
 	return true
 }
