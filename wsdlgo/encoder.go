@@ -740,7 +740,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float", "double", "decimal":
+	case "float", "double":
 		return "float64"
 	case "decimal":
 		// big.Float works well enough with XML serialization,
