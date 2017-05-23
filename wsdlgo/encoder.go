@@ -740,7 +740,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "int"
 	case "long":
 		return "int64"
-	case "float", "double":
+	case "float", "double", "decimal":
 		return "float64"
 	case "decimal":
 		// big.Float works well enough with XML serialization,
@@ -767,7 +767,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 	case "duration":
 		ge.needsDurationType = true
 		return "Duration"
-	case "anysequence":
+	case "anysequence", "anytype", "anysimpletype":
 		return "interface{}"
 	default:
 		return "*" + strings.Title(strings.Replace(v, ".", "", -1))
