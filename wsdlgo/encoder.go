@@ -872,7 +872,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 	case "duration":
 		ge.needsDurationType = true
 		return "Duration"
-	case "anysequence":
+	case "anysequence", "anytype", "anysimpletype":
 		return "interface{}"
 	default:
 		return "*" + strings.Title(strings.Replace(v, ".", "", -1))

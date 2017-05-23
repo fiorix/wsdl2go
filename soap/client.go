@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 )
 
 // A RoundTripper executes a request passing the given req as the SOAP
@@ -53,6 +54,7 @@ func (c *Client) RoundTrip(ctx context.Context, in, out Message) error {
 		Header:       c.Header,
 		Body:         Body{Message: in},
 	}
+
 	if req.EnvelopeAttr == "" {
 		req.EnvelopeAttr = "http://schemas.xmlsoap.org/soap/envelope/"
 	}
@@ -77,6 +79,7 @@ func (c *Client) RoundTrip(ctx context.Context, in, out Message) error {
 		return err
 	}
 	r.Header.Set("Content-Type", ct)
+	r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
 	if c.Pre != nil {
 		c.Pre(r)
 	}
