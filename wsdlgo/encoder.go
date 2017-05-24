@@ -770,7 +770,7 @@ func scrubName(unscrubbed string) (name string) {
 
 	// Because other languages just don't care
 	if isGoKeyword[name] {
-		name = unscrubbed + unscrubbed
+		name = name + name
 	}
 
 	return name
