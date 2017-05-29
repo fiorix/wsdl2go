@@ -649,17 +649,20 @@ func asGoParamsString(params []*parameter) string {
 	return strings.Join(goP, ", ")
 }
 
+// these are used by scrubName--not recompiled
+var idFinder = regexp.MustCompile("(.*)Id$")
+var underscoreFinder = regexp.MustCompile("(.+)_(.+)")
+
 func scrubName(unscrubbed string) (name string) {
 
 	name = unscrubbed
 
 	// Golint wants fields and variable names with "ID" instead of "Id"
-	idFinder := regexp.MustCompile("(.*)Id$")
 	name = idFinder.ReplaceAllString(name, "${1}ID")
 
 	// Golint doesn't want fields and variable names with "_" anywhere--remove mid-word matches,
-	underscoreFinder := regexp.MustCompile("(.+)_(.+)")
 	name = underscoreFinder.ReplaceAllString(name, "${1}${2}")
+
 	// replace edge underscores with "Var"-- set n as 2 because there are maximum 2 edge cases
 	name = strings.Replace(name, "_", "Var", 2)
 
