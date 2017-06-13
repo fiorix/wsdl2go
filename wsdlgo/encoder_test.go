@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/seamuncle/wsdl2go/wsdl"
 )
 
 func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions {
