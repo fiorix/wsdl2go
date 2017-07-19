@@ -17,6 +17,7 @@ import (
 // the HTTP request, or de-serializing the response.
 type RoundTripper interface {
 	RoundTrip(req, resp Message) error
+	RoundTripSoap12(action string, req, resp Message) error
 }
 
 // Message is an opaque type used by the RoundTripper to carry XML
@@ -45,8 +46,7 @@ type Client struct {
 	Pre         func(*http.Request) // Optional hook to modify outbound requests
 }
 
-// RoundTrip implements the RoundTripper interface.
-func (c *Client) RoundTrip(in, out Message) error {
+func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) error {
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
@@ -65,10 +65,6 @@ func (c *Client) RoundTrip(in, out Message) error {
 	if err != nil {
 		return err
 	}
-	ct := c.ContentType
-	if ct == "" {
-		ct = "text/xml"
-	}
 	cli := c.Config
 	if cli == nil {
 		cli = http.DefaultClient
@@ -77,8 +73,7 @@ func (c *Client) RoundTrip(in, out Message) error {
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Content-Type", ct)
-	r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
+	setHeaders(r)
 	if c.Pre != nil {
 		c.Pre(r)
 	}
@@ -94,6 +89,28 @@ func (c *Client) RoundTrip(in, out Message) error {
 		return fmt.Errorf("%q: %q", resp.Status, body)
 	}
 	return xml.NewDecoder(resp.Body).Decode(out)
+}
+
+// RoundTrip implements the RoundTripper interface.
+func (c *Client) RoundTrip(in, out Message) error {
+	headerFunc := func(r *http.Request) {
+		ct := c.ContentType
+		if ct == "" {
+			ct = "text/xml"
+		}
+		r.Header.Set("Content-Type", ct)
+		if in != nil {
+			r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
+		}
+	}
+	return doRoundTrip(c, headerFunc, in, out)
+}
+
+func (c *Client) RoundTripSoap12(action string, in, out Message) error {
+	headerFunc := func(r *http.Request) {
+		r.Header.Add("Content-Type", fmt.Sprintf("application/soap+xml; charset=utf-8; action=\"%s\"", action))
+	}
+	return doRoundTrip(c, headerFunc, in, out)
 }
 
 // Envelope is a SOAP envelope.
