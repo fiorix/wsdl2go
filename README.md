@@ -46,7 +46,7 @@ import (
 func main() {
 	cli := soap.Client{
 		URL: "http://server",
-		Namespace: hello.Namespace,
+		Namespace: example.Namespace,
 	}
 	soapService := example.NewEchoService(&cli)
 	echoReply, err := soapService.Echo(&example.EchoRequest{Data: "hello world"})
