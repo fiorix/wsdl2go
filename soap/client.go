@@ -34,15 +34,21 @@ type AuthHeader struct {
 	Password  string `xml:"ns:password"`
 }
 
+type BasicAuthentication struct {
+	Username string
+	Password string
+}
+
 // Client is a SOAP client.
 type Client struct {
-	URL         string              // URL of the server
-	Namespace   string              // SOAP Namespace
-	Envelope    string              // Optional SOAP Envelope
-	Header      Header              // Optional SOAP Header
-	ContentType string              // Optional Content-Type (default text/xml)
-	Config      *http.Client        // Optional HTTP client
-	Pre         func(*http.Request) // Optional hook to modify outbound requests
+	URL         string               		     // URL of the server
+	Namespace   string                       // SOAP Namespace
+	BasicAuthentication BasicAuthentication  // Basic authentication
+	Envelope    string                       // Optional SOAP Envelope
+	Header      Header                       // Optional SOAP Header
+	ContentType string                       // Optional Content-Type (default text/xml)
+	Config      *http.Client                 // Optional HTTP client
+	Pre         func(*http.Request)          // Optional hook to modify outbound requests
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -78,6 +84,11 @@ func (c *Client) RoundTrip(in, out Message) error {
 		return err
 	}
 	r.Header.Set("Content-Type", ct)
+
+	if (BasicAuthentication{} != c.BasicAuthentication){
+			r.SetBasicAuth(c.BasicAuthentication.Username, c.BasicAuthentication.Password)
+	}
+
 	r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
 	if c.Pre != nil {
 		c.Pre(r)
