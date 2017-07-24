@@ -3,12 +3,12 @@ package soap
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 )
 
 // A RoundTripper executes a request passing the given req as the SOAP
@@ -46,7 +46,7 @@ type Client struct {
 }
 
 // RoundTrip implements the RoundTripper interface.
-func (c *Client) RoundTrip(in, out Message) error {
+func (c *Client) RoundTrip(ctx context.Context, in, out Message) error {
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
@@ -78,10 +78,14 @@ func (c *Client) RoundTrip(in, out Message) error {
 		return err
 	}
 	r.Header.Set("Content-Type", ct)
-	r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
 	if c.Pre != nil {
 		c.Pre(r)
 	}
+
+	if ctx != nil {
+		r.Header.Set("SOAPAction", ctx.Value("SOAPAction").(string))
+	}
+
 	resp, err := cli.Do(r)
 	if err != nil {
 		return err
