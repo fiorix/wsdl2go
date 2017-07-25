@@ -192,10 +192,19 @@ type Binding struct {
 // BindingOperation describes the requirement for binding SOAP to WSDL
 // operations.
 type BindingOperation struct {
-	XMLName xml.Name   `xml:"operation"`
-	Name    string     `xml:"name,attr"`
-	Input   *BindingIO `xml:"input>body"`
-	Output  *BindingIO `xml:"output>body"`
+	XMLName   xml.Name        `xml:"operation"`
+	Name      string          `xml:"name,attr"`
+	Operation Soap12Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	Input     *BindingIO      `xml:"input>body"`
+	Output    *BindingIO      `xml:"output>body"`
+}
+
+// Note - soap12 namespace is important as the presence of a
+// Soap12Operation.SoapAction is used to switch things over to sending
+// a soap 1.2 content type header (application/xml; charset=UTF-8; action='blah')
+type Soap12Operation struct {
+	XMLName    xml.Name   `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	SoapAction string     `xml:"soapAction,attr"`
 }
 
 // BindingIO describes the IO binding of SOAP operations. See IO for details.

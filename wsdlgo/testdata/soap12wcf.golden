@@ -1,0 +1,41 @@
+package testsoap12binding
+
+import (
+	"encoding/xml"
+
+	"github.com/fiorix/wsdl2go/soap"
+)
+
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://foo.bar.com/HelloWorld/1.0"
+
+// NewTest creates an initializes a Test.
+func NewTest(cli *soap.Client) Test {
+	return &test{cli}
+}
+
+// Test was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type Test interface {
+	// HelloWorld was auto-generated from WSDL.
+	HelloWorld(α *HelloRequest) (β *HelloResponse, err error)
+}
+
+// test implements the Test interface.
+type test struct {
+	cli *soap.Client
+}
+
+// HelloWorld was auto-generated from WSDL.
+func (p *test) HelloWorld(α *HelloRequest) (β *HelloResponse, err error) {
+	γ := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    struct {
+			M HelloResponse `xml:"HelloResponse"`
+		}
+	}{}
+	if err = p.cli.RoundTripSoap12("http://example.com/Test/HelloWorldRequest", α, &γ); err != nil {
+		return nil, err
+	}
+	return &γ.Body.M, nil
+}

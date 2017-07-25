@@ -39,6 +39,7 @@ var EncoderCases = []struct {
 	{F: "w3cexample2.wsdl", G: "w3cexample2.golden", E: nil},
 	{F: "w3example1.wsdl", G: "w3example1.golden", E: nil},
 	{F: "w3example2.wsdl", G: "w3example2.golden", E: nil},
+	{F: "soap12wcf.wsdl", G: "soap12wcf.golden", E: nil},
 	{F: "memcache.wsdl", G: "memcache.golden", E: nil},
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
 	{F: "data.wsdl", G: "data.golden", E: nil},
