@@ -10,6 +10,8 @@ import (
 	"net/http"
 )
 
+const XSINamespace = "http://www.w3.org/2001/XMLSchema-instance"
+
 // A RoundTripper executes a request passing the given req as the SOAP
 // envelope body. The HTTP response is then de-serialized onto the resp
 // object. Returns error in case an error occurs serializing req, making
@@ -36,19 +38,22 @@ type AuthHeader struct {
 
 // Client is a SOAP client.
 type Client struct {
-	URL         string              // URL of the server
-	Namespace   string              // SOAP Namespace
-	Envelope    string              // Optional SOAP Envelope
-	Header      Header              // Optional SOAP Header
-	ContentType string              // Optional Content-Type (default text/xml)
-	Config      *http.Client        // Optional HTTP client
-	Pre         func(*http.Request) // Optional hook to modify outbound requests
+	URL                    string              // URL of the server
+	Namespace              string              // SOAP Namespace
+	XSINamespace           string              // Include xsi Namespace to SOAP Action header
+	ExcludeActionNamespace bool                // Include Namespace to SOAP Action header
+	Envelope               string              // Optional SOAP Envelope
+	Header                 Header              // Optional SOAP Header
+	ContentType            string              // Optional Content-Type (default text/xml)
+	Config                 *http.Client        // Optional HTTP client
+	Pre                    func(*http.Request) // Optional hook to modify outbound requests
 }
 
 func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) error {
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
+		XSIAttr:      c.XSINamespace,
 		Header:       c.Header,
 		Body:         Body{Message: in},
 	}
@@ -93,13 +98,19 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 // RoundTrip implements the RoundTripper interface.
 func (c *Client) RoundTrip(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
+		var actionName string
 		ct := c.ContentType
 		if ct == "" {
 			ct = "text/xml"
 		}
 		r.Header.Set("Content-Type", ct)
 		if in != nil {
-			r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, soapAction))
+			if c.ExcludeActionNamespace {
+				actionName = soapAction
+			} else {
+				actionName = fmt.Sprintf("%s/%s", c.Namespace, soapAction)
+			}
+			r.Header.Add("SOAPAction", actionName)
 		}
 	}
 	return doRoundTrip(c, headerFunc, in, out)
@@ -117,6 +128,7 @@ type Envelope struct {
 	XMLName      xml.Name `xml:"SOAP-ENV:Envelope"`
 	EnvelopeAttr string   `xml:"xmlns:SOAP-ENV,attr"`
 	NSAttr       string   `xml:"xmlns:ns,attr"`
+	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"SOAP-ENV:Header"`
 	Body         Body
 }
