@@ -3,7 +3,7 @@ package testsoap12binding
 import (
 	"encoding/xml"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/retailnext/wsdl2go/soap"
 )
 
 // Namespace was auto-generated from WSDL.
@@ -18,7 +18,7 @@ func NewTest(cli *soap.Client) Test {
 // and defines interface for the remote service. Useful for testing.
 type Test interface {
 	// HelloWorld was auto-generated from WSDL.
-	HelloWorld(α *HelloRequest) (β *HelloResponse, err error)
+	HelloWorld(α string) (β string, err error)
 }
 
 // test implements the Test interface.
@@ -27,15 +27,15 @@ type test struct {
 }
 
 // HelloWorld was auto-generated from WSDL.
-func (p *test) HelloWorld(α *HelloRequest) (β *HelloResponse, err error) {
+func (p *test) HelloWorld(α string) (β string, err error) {
 	γ := struct {
 		XMLName xml.Name `xml:"Envelope"`
 		Body    struct {
-			M HelloResponse `xml:"HelloResponse"`
+			M string `xml:"HelloResponse"`
 		}
 	}{}
 	if err = p.cli.RoundTripSoap12("http://example.com/Test/HelloWorldRequest", α, &γ); err != nil {
-		return nil, err
+		return "", err
 	}
-	return &γ.Body.M, nil
+	return γ.Body.M, nil
 }
