@@ -3,7 +3,7 @@ package stockquotesoapbinding
 import (
 	"encoding/xml"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/retailnext/wsdl2go/soap"
 )
 
 // Namespace was auto-generated from WSDL.
@@ -45,7 +45,7 @@ func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *Trade
 			M TradePrice `xml:"TradePrice"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip("GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil

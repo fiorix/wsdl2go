@@ -3,7 +3,7 @@ package memoryservice
 import (
 	"encoding/xml"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/retailnext/wsdl2go/soap"
 )
 
 // Namespace was auto-generated from WSDL.
@@ -68,7 +68,7 @@ func (p *memoryServicePortType) Get(α string) (β *GetResponse, err error) {
 			M GetResponse `xml:"GetResponse"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip("Get", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
@@ -82,7 +82,7 @@ func (p *memoryServicePortType) GetMulti(α *GetMultiRequest) (β *GetMultiRespo
 			M GetMultiResponse `xml:"GetMultiResponse"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip("GetMulti", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
@@ -96,7 +96,7 @@ func (p *memoryServicePortType) Set(α *SetRequest) (β bool, err error) {
 			M bool `xml:"bool"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip("Set", α, &γ); err != nil {
 		return false, err
 	}
 	return γ.Body.M, nil

@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 )
 
 // A RoundTripper executes a request passing the given req as the SOAP
@@ -92,7 +91,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 }
 
 // RoundTrip implements the RoundTripper interface.
-func (c *Client) RoundTrip(in, out Message) error {
+func (c *Client) RoundTrip(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
 		ct := c.ContentType
 		if ct == "" {
@@ -100,7 +99,7 @@ func (c *Client) RoundTrip(in, out Message) error {
 		}
 		r.Header.Set("Content-Type", ct)
 		if in != nil {
-			r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, reflect.TypeOf(in).Elem().Name()))
+			r.Header.Add("SOAPAction", fmt.Sprintf("%s/%s", c.Namespace, soapAction))
 		}
 	}
 	return doRoundTrip(c, headerFunc, in, out)
