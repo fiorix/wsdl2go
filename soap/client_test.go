@@ -1,12 +1,12 @@
 package soap
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
-	"fmt"
 )
 
 func TestRoundTrip(t *testing.T) {
@@ -28,27 +28,31 @@ func TestRoundTrip(t *testing.T) {
 	pre := func(r *http.Request) { r.Header.Set("X-Test", "true") }
 	cases := []struct {
 		C       *Client
+		Action  string
 		In, Out Message
 		Fail    bool
 	}{
 		{
-			C:   &Client{URL: s.URL, Pre: pre},
-			In:  &msgT{A: "hello", B: "world"},
-			Out: &envT{},
+			C:      &Client{URL: s.URL, Pre: pre},
+			Action: "hello",
+			In:     &msgT{A: "hello", B: "world"},
+			Out:    &envT{},
 		},
 		{
-			C:   &Client{URL: s.URL, Pre: pre},
-			In:  &msgT{A: "foo", B: "bar"},
-			Out: &envT{},
+			C:      &Client{URL: s.URL, Pre: pre},
+			Action: "foo",
+			In:     &msgT{A: "foo", B: "bar"},
+			Out:    &envT{},
 		},
 		{
-			C:    &Client{URL: "", Pre: pre},
-			Out:  &envT{},
-			Fail: true,
+			C:      &Client{URL: "", Pre: pre},
+			Action: "none",
+			Out:    &envT{},
+			Fail:   true,
 		},
 	}
 	for i, tc := range cases {
-		err := tc.C.RoundTrip(tc.In, tc.Out)
+		err := tc.C.RoundTrip(tc.Action, tc.In, tc.Out)
 		if err != nil && !tc.Fail {
 			t.Errorf("test %d: %v", i, err)
 			continue

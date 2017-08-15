@@ -72,7 +72,7 @@ func (p *dataEndpointPortType) GetData(α *GetData) (β *GetDataResp, err error)
 			M GetDataResp `xml:"getDataResp"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTrip("GetData", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
