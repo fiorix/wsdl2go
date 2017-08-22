@@ -1037,9 +1037,6 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		}
 		el = nel
 	}
-	if el.Type == "" {
-		el.Type = "string"
-	}
 	var slicetype string
 	if el.Type == "" && el.ComplexType != nil {
 		seq := el.ComplexType.Sequence
@@ -1059,6 +1056,9 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 				slicetype = el.Name
 			}
 		}
+	}
+	if el.Type == "" {
+		el.Type = "string"
 	}
 	tag := el.Name
 	fmt.Fprintf(w, "%s ", strings.Title(el.Name))
