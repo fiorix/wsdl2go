@@ -9,6 +9,63 @@ import (
 	"testing"
 )
 
+type StructFieldSetXMLData struct {
+	TypeAttrXSI, TypeNamespace string
+}
+
+type SetXmlData struct {
+	TypeAttrXSI, TypeNamespace string
+	Pointer                    *StructFieldSetXMLData
+	Field                      StructFieldSetXMLData
+}
+
+func (s *SetXmlData) SetXMLType() {
+	s.TypeAttrXSI = "test"
+	s.TypeNamespace = "test 1"
+}
+
+func (s *StructFieldSetXMLData) SetXMLType() {
+	s.TypeAttrXSI = "struct"
+	s.TypeNamespace = "struct 1"
+}
+
+func TestSetXMLType(t *testing.T) {
+	type interfaceT interface{}
+	type testT struct {
+		A string
+		B []interfaceT
+	}
+
+	test := &testT{
+		A: "unchanged",
+	}
+	list := []*SetXmlData{{
+		Pointer: &StructFieldSetXMLData{},
+	}, {}}
+	test.B = make([]interfaceT, len(list))
+	for i, el := range list {
+		test.B[i] = el
+	}
+	setXMLType(reflect.ValueOf(test))
+	for _, interfaceEl := range test.B {
+		el, _ := interfaceEl.(*SetXmlData)
+		if el.TypeAttrXSI != "test" {
+			t.Fatal("TypeAttrXSI not set")
+		}
+		if el.TypeNamespace != "test 1" {
+			t.Fatal("TypeNamespace not set")
+		}
+		if el.Pointer != nil {
+			if el.Pointer.TypeAttrXSI != "struct" {
+				t.Fatal("TypeAttrXSI not set")
+			}
+		}
+		if el.Field.TypeAttrXSI != "struct" {
+			t.Fatal("TypeAttrXSI not set")
+		}
+	}
+}
+
 func TestRoundTrip(t *testing.T) {
 	type msgT struct{ A, B string }
 	type envT struct{ Body struct{ Message msgT } }

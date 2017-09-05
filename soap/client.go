@@ -13,6 +13,8 @@ import (
 
 const XSINamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
+var XMLTyperType reflect.Type = reflect.TypeOf((*XMLTyper)(nil)).Elem()
+
 // A RoundTripper executes a request passing the given req as the SOAP
 // envelope body. The HTTP response is then de-serialized onto the resp
 // object. Returns error in case an error occurs serializing req, making
@@ -41,7 +43,6 @@ type AuthHeader struct {
 type Client struct {
 	URL                    string              // URL of the server
 	Namespace              string              // SOAP Namespace
-	XSINamespace           string              // Include xsi Namespace to SOAP Action header
 	ExcludeActionNamespace bool                // Include Namespace to SOAP Action header
 	Envelope               string              // Optional SOAP Envelope
 	Header                 Header              // Optional SOAP Header
@@ -50,11 +51,47 @@ type Client struct {
 	Pre                    func(*http.Request) // Optional hook to modify outbound requests
 }
 
+type XMLTyper interface {
+	SetXMLType()
+}
+
+func setXMLType(v reflect.Value) {
+	if !v.IsValid() {
+		return
+	}
+	switch v.Type().Kind() {
+	case reflect.Interface:
+		setXMLType(v.Elem())
+	case reflect.Ptr:
+		if v.IsNil() {
+			break
+		}
+		ok := v.Type().Implements(XMLTyperType)
+		if ok {
+			v.MethodByName("SetXMLType").Call(nil)
+		}
+		setXMLType(v.Elem())
+	case reflect.Slice:
+		for i := 0; i < v.Len(); i++ {
+			setXMLType(v.Index(i))
+		}
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			if v.Field(i).CanAddr() {
+				setXMLType(v.Field(i).Addr())
+			} else {
+				setXMLType(v.Field(i))
+			}
+		}
+	}
+}
+
 func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) error {
+	setXMLType(reflect.ValueOf(in))
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
-		XSIAttr:      c.XSINamespace,
+		XSIAttr:      XSINamespace,
 		Header:       c.Header,
 		Body:         Body{Message: in},
 	}

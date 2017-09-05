@@ -23,6 +23,7 @@
                 <xs:sequence>
                     <xs:element minOccurs="0" name="clientIdentification" nillable="true" type="ax2179:ClientIdentification"/>
                 </xs:sequence>
+                <xs:attribute name="TestAttr" type="xs:string"></xs:attribute>
             </xs:complexType>
             <xs:complexType name="BaseResp">
                 <xs:sequence>

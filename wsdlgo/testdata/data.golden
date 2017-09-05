@@ -24,6 +24,7 @@ type DataEndpointPortType interface {
 // BaseReq was auto-generated from WSDL.
 type BaseReq struct {
 	ClientIdentification *ClientIdentification `xml:"clientIdentification,omitempty" json:"clientIdentification,omitempty" yaml:"clientIdentification,omitempty"`
+	TestAttr             string                `xml:"TestAttr,attr,omitempty" json:"TestAttr,attr,omitempty" yaml:"TestAttr,attr,omitempty"`
 }
 
 // BaseResp was auto-generated from WSDL.
@@ -35,17 +36,34 @@ type BaseResp struct {
 // DataGenerationReq was auto-generated from WSDL.
 type DataGenerationReq struct {
 	ClientIdentification  *ClientIdentification `xml:"clientIdentification,omitempty" json:"clientIdentification,omitempty" yaml:"clientIdentification,omitempty"`
+	TestAttr              string                `xml:"TestAttr,attr,omitempty" json:"TestAttr,attr,omitempty" yaml:"TestAttr,attr,omitempty"`
 	CustomerAccountNumber string                `xml:"customerAccountNumber,omitempty" json:"customerAccountNumber,omitempty" yaml:"customerAccountNumber,omitempty"`
 	PdfGenerationReqType  int                   `xml:"pdfGenerationReqType,omitempty" json:"pdfGenerationReqType,omitempty" yaml:"pdfGenerationReqType,omitempty"`
 	WithCreditTranferForm bool                  `xml:"withCreditTranferForm,omitempty" json:"withCreditTranferForm,omitempty" yaml:"withCreditTranferForm,omitempty"`
+	TypeAttrXSI           string                `xml:"xsi:type,attr,omitempty"`
+	TypeNamespace         string                `xml:"xmlns:objtype,attr,omitempty"`
+}
+
+// SetXMLType was auto-generated from WSDL.
+func (t *DataGenerationReq) SetXMLType() {
+	t.TypeAttrXSI = "objtype:DataGenerationReq"
+	t.TypeNamespace = "http://pdf.host.com/xsd"
 }
 
 // DataGenerationResp was auto-generated from WSDL.
 type DataGenerationResp struct {
-	ErrorDetails *ErrorDetails `xml:"errorDetails,omitempty" json:"errorDetails,omitempty" yaml:"errorDetails,omitempty"`
-	Success      bool          `xml:"success,omitempty" json:"success,omitempty" yaml:"success,omitempty"`
-	Pdf          []byte        `xml:"pdf,omitempty" json:"pdf,omitempty" yaml:"pdf,omitempty"`
-	Url          string        `xml:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty"`
+	ErrorDetails  *ErrorDetails `xml:"errorDetails,omitempty" json:"errorDetails,omitempty" yaml:"errorDetails,omitempty"`
+	Success       bool          `xml:"success,omitempty" json:"success,omitempty" yaml:"success,omitempty"`
+	Pdf           []byte        `xml:"pdf,omitempty" json:"pdf,omitempty" yaml:"pdf,omitempty"`
+	Url           string        `xml:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty"`
+	TypeAttrXSI   string        `xml:"xsi:type,attr,omitempty"`
+	TypeNamespace string        `xml:"xmlns:objtype,attr,omitempty"`
+}
+
+// SetXMLType was auto-generated from WSDL.
+func (t *DataGenerationResp) SetXMLType() {
+	t.TypeAttrXSI = "objtype:DataGenerationResp"
+	t.TypeNamespace = "http://pdf.host.com/xsd"
 }
 
 // GetData was auto-generated from WSDL.

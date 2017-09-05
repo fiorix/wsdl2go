@@ -6,17 +6,32 @@ import "encoding/xml"
 
 // Definitions is the root element of a WSDL document.
 type Definitions struct {
-	XMLName         xml.Name   `xml:"definitions"`
-	Name            string     `xml:"name,attr"`
-	TargetNamespace string     `xml:"targetNamespace,attr"`
-	SOAPEnv         string     `xml:"SOAP-ENV,attr"`
-	SOAPEnc         string     `xml:"SOAP-ENC,attr"`
-	Service         Service    `xml:"service"`
-	Imports         []*Import  `xml:"import"`
-	Schema          Schema     `xml:"types>schema"`
-	Messages        []*Message `xml:"message"`
-	PortType        PortType   `xml:"portType"` // TODO: PortType slice?
-	Binding         Binding    `xml:"binding"`
+	XMLName         xml.Name          `xml:"definitions"`
+	Name            string            `xml:"name,attr"`
+	TargetNamespace string            `xml:"targetNamespace,attr"`
+	Namespaces      map[string]string `xml:"-"`
+	SOAPEnv         string            `xml:"SOAP-ENV,attr"`
+	SOAPEnc         string            `xml:"SOAP-ENC,attr"`
+	Service         Service           `xml:"service"`
+	Imports         []*Import         `xml:"import"`
+	Schema          Schema            `xml:"types>schema"`
+	Messages        []*Message        `xml:"message"`
+	PortType        PortType          `xml:"portType"` // TODO: PortType slice?
+	Binding         Binding           `xml:"binding"`
+}
+
+type definitionDup Definitions
+
+func (def *Definitions) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Space == "xmlns" {
+			if def.Namespaces == nil {
+				def.Namespaces = make(map[string]string)
+			}
+			def.Namespaces[attr.Name.Local] = attr.Value
+		}
+	}
+	return d.DecodeElement((*definitionDup)(def), &start)
 }
 
 // Service defines a WSDL service and with a location, like an HTTP server.
@@ -41,19 +56,41 @@ type Address struct {
 
 // Schema of WSDL document.
 type Schema struct {
-	XMLName      xml.Name        `xml:"schema"`
-	Imports      []*ImportSchema `xml:"import"`
-	SimpleTypes  []*SimpleType   `xml:"simpleType"`
-	ComplexTypes []*ComplexType  `xml:"complexType"`
-	Elements     []*Element      `xml:"element"`
+	XMLName         xml.Name          `xml:"schema"`
+	TargetNamespace string            `xml:"targetNamespace,attr"`
+	Namespaces      map[string]string `xml:"-"`
+	Imports         []*ImportSchema   `xml:"import"`
+	SimpleTypes     []*SimpleType     `xml:"simpleType"`
+	ComplexTypes    []*ComplexType    `xml:"complexType"`
+	Elements        []*Element        `xml:"element"`
+}
+
+// Unmarshaling solution from Matt Harden (http://grokbase.com/t/gg/golang-nuts/14bk21xb7a/go-nuts-extending-encoding-xml-to-capture-unknown-attributes)
+// We duplicate the type Schema here so that we can unmarshal into it
+// without recursively triggering the *Schema.UnmarshalXML method.
+// Other options are to embed tt into Type or declare Type as a synonym for tt.
+// The important thing is that tt is only used directly in *Schema.UnmarshalXML or Schema.MarshalXML.
+type schemaDup Schema
+
+func (schema *Schema) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Space == "xmlns" {
+			if schema.Namespaces == nil {
+				schema.Namespaces = make(map[string]string)
+			}
+			schema.Namespaces[attr.Name.Local] = attr.Value
+		}
+	}
+	return d.DecodeElement((*schemaDup)(schema), &start)
 }
 
 // SimpleType describes a simple type, such as string.
 type SimpleType struct {
-	XMLName     xml.Name     `xml:"simpleType"`
-	Name        string       `xml:"name,attr"`
-	Union       *Union       `xml:"union"`
-	Restriction *Restriction `xml:"restriction"`
+	XMLName         xml.Name     `xml:"simpleType"`
+	Name            string       `xml:"name,attr"`
+	Union           *Union       `xml:"union"`
+	Restriction     *Restriction `xml:"restriction"`
+	TargetNamespace string
 }
 
 // Union is a mix of multiple types in a union.
@@ -78,13 +115,15 @@ type Enum struct {
 
 // ComplexType describes a complex type, such as a struct.
 type ComplexType struct {
-	XMLName        xml.Name        `xml:"complexType"`
-	Name           string          `xml:"name,attr"`
-	Abstract       bool            `xml:"abstract,attr"`
-	Doc            string          `xml:"annotation>documentation"`
-	AllElements    []*Element      `xml:"all>element"`
-	ComplexContent *ComplexContent `xml:"complexContent"`
-	Sequence       *Sequence       `xml:"sequence"`
+	XMLName         xml.Name        `xml:"complexType"`
+	Name            string          `xml:"name,attr"`
+	Abstract        bool            `xml:"abstract,attr"`
+	Doc             string          `xml:"annotation>documentation"`
+	AllElements     []*Element      `xml:"all>element"`
+	ComplexContent  *ComplexContent `xml:"complexContent"`
+	Sequence        *Sequence       `xml:"sequence"`
+	Attributes      []*Attribute    `xml:"attribute"`
+	TargetNamespace string
 }
 
 // ComplexContent describes complex content within a complex type. Usually
@@ -96,9 +135,10 @@ type ComplexContent struct {
 
 // Extension describes a complex content extension.
 type Extension struct {
-	XMLName  xml.Name  `xml:"extension"`
-	Base     string    `xml:"base,attr"`
-	Sequence *Sequence `xml:"sequence"`
+	XMLName    xml.Name     `xml:"extension"`
+	Base       string       `xml:"base,attr"`
+	Sequence   *Sequence    `xml:"sequence"`
+	Attributes []*Attribute `xml:"attribute"`
 }
 
 // Sequence describes a list of elements (parameters) of a type.
@@ -107,6 +147,17 @@ type Sequence struct {
 	ComplexTypes []*ComplexType `xml:"complexType"`
 	Elements     []*Element     `xml:"element"`
 	Any          []*AnyElement  `xml:"any"`
+}
+
+// Element describes an element of a given type.
+type Attribute struct {
+	XMLName  xml.Name `xml:"attribute"`
+	Name     string   `xml:"name,attr"`
+	Ref      string   `xml:"ref,attr"`
+	Type     string   `xml:"type,attr"`
+	Min      int      `xml:"minOccurs,attr"`
+	Max      string   `xml:"maxOccurs,attr"` // can be # or unbounded
+	Nillable bool     `xml:"nillable,attr"`
 }
 
 // Element describes an element of a given type.
