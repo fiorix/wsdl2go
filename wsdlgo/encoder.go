@@ -1043,8 +1043,10 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		if seq != nil {
 			if len(seq.Elements) == 1 {
 				n := el.Name
-				el = el.ComplexType.Sequence.Elements[0]
-				slicetype = el.Name
+				seqel := el.ComplexType.Sequence.Elements[0]
+				el = new(wsdl.Element)
+				*el = *seqel
+				slicetype = seqel.Name
 				el.Name = n
 			} else if len(seq.Any) == 1 {
 				el = &wsdl.Element{
