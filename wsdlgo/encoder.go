@@ -580,7 +580,6 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	return true
 }
 
-
 func renameParam(p, name string) string {
 	v := strings.SplitN(p, " ", 2)
 	if len(v) != 2 {
