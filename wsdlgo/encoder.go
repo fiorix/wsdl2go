@@ -1059,8 +1059,9 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			}
 		}
 	}
-	if el.Type == "" {
-		el.Type = "string"
+	et := el.Type
+	if et == "" {
+		et = "string"
 	}
 	tag := el.Name
 	fmt.Fprintf(w, "%s ", strings.Title(el.Name))
@@ -1070,7 +1071,7 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			tag = el.Name + ">" + slicetype
 		}
 	}
-	typ := ge.wsdl2goType(el.Type)
+	typ := ge.wsdl2goType(et)
 	if el.Nillable || el.Min == 0 {
 		tag += ",omitempty"
 	}
