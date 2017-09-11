@@ -492,7 +492,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
 		}
 	}{}
-	if err = p.cli.RoundTrip("{{.Name}}", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("{{.Name}}", α, &γ); err != nil {
 		return {{.RetDef}}, err
 	}
 	return {{if .RetPtr}}&{{end}}γ.Body.M, nil

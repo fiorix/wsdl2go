@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 )
 
 const XSINamespace = "http://www.w3.org/2001/XMLSchema-instance"
@@ -96,7 +97,31 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 }
 
 // RoundTrip implements the RoundTripper interface.
-func (c *Client) RoundTrip(soapAction string, in, out Message) error {
+func (c *Client) RoundTrip(in, out Message) error {
+	headerFunc := func(r *http.Request) {
+		var actionName, soapAction string
+		if in != nil {
+			soapAction = reflect.TypeOf(in).Elem().Name()
+		}
+		ct := c.ContentType
+		if ct == "" {
+			ct = "text/xml"
+		}
+		r.Header.Set("Content-Type", ct)
+		if in != nil {
+			if c.ExcludeActionNamespace {
+				actionName = soapAction
+			} else {
+				actionName = fmt.Sprintf("%s/%s", c.Namespace, soapAction)
+			}
+			r.Header.Add("SOAPAction", actionName)
+		}
+	}
+	return doRoundTrip(c, headerFunc, in, out)
+}
+
+// RoundTrip implements the RoundTripper interface.
+func (c *Client) RoundTripWithAction(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
 		var actionName string
 		ct := c.ContentType
