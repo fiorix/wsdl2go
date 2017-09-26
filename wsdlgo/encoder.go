@@ -580,7 +580,6 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	return true
 }
 
-
 func renameParam(p, name string) string {
 	v := strings.SplitN(p, " ", 2)
 	if len(v) != 2 {
@@ -1043,8 +1042,10 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		if seq != nil {
 			if len(seq.Elements) == 1 {
 				n := el.Name
-				el = el.ComplexType.Sequence.Elements[0]
-				slicetype = el.Name
+				seqel := el.ComplexType.Sequence.Elements[0]
+				el = new(wsdl.Element)
+				*el = *seqel
+				slicetype = seqel.Name
 				el.Name = n
 			} else if len(seq.Any) == 1 {
 				el = &wsdl.Element{
@@ -1057,8 +1058,9 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			}
 		}
 	}
-	if el.Type == "" {
-		el.Type = "string"
+	et := el.Type
+	if et == "" {
+		et = "string"
 	}
 	tag := el.Name
 	fmt.Fprintf(w, "%s ", strings.Title(el.Name))
@@ -1068,7 +1070,7 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			tag = el.Name + ">" + slicetype
 		}
 	}
-	typ := ge.wsdl2goType(el.Type)
+	typ := ge.wsdl2goType(et)
 	if el.Nillable || el.Min == 0 {
 		tag += ",omitempty"
 	}
