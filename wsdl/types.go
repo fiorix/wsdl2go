@@ -203,8 +203,8 @@ type BindingOperation struct {
 // Soap12Operation.SoapAction is used to switch things over to sending
 // a soap 1.2 content type header (application/xml; charset=UTF-8; action='blah')
 type Soap12Operation struct {
-	XMLName    xml.Name   `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
-	SoapAction string     `xml:"soapAction,attr"`
+	XMLName    xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	SoapAction string   `xml:"soapAction,attr"`
 }
 
 // BindingIO describes the IO binding of SOAP operations. See IO for details.

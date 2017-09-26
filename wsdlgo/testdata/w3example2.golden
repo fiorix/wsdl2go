@@ -45,7 +45,7 @@ func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *Trade
 			M TradePrice `xml:"TradePrice"`
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil

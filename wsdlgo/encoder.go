@@ -65,7 +65,7 @@ type goEncoder struct {
 	needsTimeType     bool
 	needsDateTimeType bool
 	needsDurationType bool
-	needsTag          map[string]bool
+	needsTag          map[string]string
 	needsStdPkg       map[string]bool
 	needsExtPkg       map[string]bool
 }
@@ -81,7 +81,7 @@ func NewEncoder(w io.Writer) Encoder {
 		funcs:       make(map[string]*wsdl.Operation),
 		messages:    make(map[string]*wsdl.Message),
 		soapOps:     make(map[string]*wsdl.BindingOperation),
-		needsTag:    make(map[string]bool),
+		needsTag:    make(map[string]string),
 		needsStdPkg: make(map[string]bool),
 		needsExtPkg: make(map[string]bool),
 	}
@@ -492,7 +492,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
 		}
 	}{}
-	if err = p.cli.RoundTrip(α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("{{.Name}}", α, &γ); err != nil {
 		return {{.RetDef}}, err
 	}
 	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
@@ -659,13 +659,19 @@ func code(list []*parameter) []string {
 func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 	params := make([]*parameter, len(m.Parts))
 	for i, param := range m.Parts {
-		var t, token string
+		var t, token, elName string
 		switch {
 		case param.Type != "":
 			t = ge.wsdl2goType(param.Type)
+			elName = ge.trimns(param.Type)
 			token = t
 		case param.Element != "":
-			t = ge.wsdl2goType(param.Element)
+			elName = ge.trimns(param.Element)
+			if el, ok := ge.elements[elName]; ok {
+				t = ge.wsdl2goType(ge.trimns(el.Type))
+			} else {
+				t = ge.wsdl2goType(param.Element)
+			}
 			token = ge.trimns(param.Element)
 		}
 		name := param.Name
@@ -674,7 +680,7 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 		}
 		params[i] = &parameter{code: name + " " + t, xmlToken: token}
 		if needsTag {
-			ge.needsTag[strings.TrimPrefix(t, "*")] = true
+			ge.needsTag[strings.TrimPrefix(t, "*")] = elName
 		}
 	}
 	return params
@@ -964,9 +970,9 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		return nil
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
-	if ge.needsTag[name] {
+	if elName, ok := ge.needsTag[name]; ok {
 		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
-			d.TargetNamespace, ct.Name)
+			d.TargetNamespace, elName)
 	}
 	err := ge.genStructFields(w, d, ct)
 	if err != nil {
