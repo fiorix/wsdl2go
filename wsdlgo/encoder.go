@@ -762,8 +762,10 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return v
 	}
 	switch strings.ToLower(v) {
-	case "int", "integer":
+	case "int":
 		return "int"
+	case "integer":
+		return "int64" // todo: replace this with math/big since integer is infinite set
 	case "long":
 		return "int64"
 	case "float", "double", "decimal":
@@ -781,6 +783,12 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		ge.needsTimeType = true
 		return "Time"
 	case "nonnegativeinteger":
+		return "uint"
+	case "positiveinteger":
+		return "uint64"
+	case "normalizedstring":
+		return "string"
+	case "unsignedint":
 		return "uint"
 	case "datetime":
 		ge.needsDateTimeType = true
@@ -1143,6 +1151,11 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 	typ := ge.wsdl2goType(et)
 	if el.Nillable || el.Min == 0 {
 		tag += ",omitempty"
+		//since we add omitempty tag, we should add pointer to type.
+		//thus xmlencoder can differ not-initialized fields from zero-initialized values
+		if !strings.HasPrefix(typ, "*") {
+			typ = "*" + typ
+		}
 	}
 	fmt.Fprintf(w, "%s `xml:\"%s\" json:\"%s\" yaml:\"%s\"`\n",
 		typ, tag, tag, tag)
