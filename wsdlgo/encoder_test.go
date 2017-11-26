@@ -43,6 +43,7 @@ var EncoderCases = []struct {
 	{F: "memcache.wsdl", G: "memcache.golden", E: nil},
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
 	{F: "data.wsdl", G: "data.golden", E: nil},
+	{F: "localimport.wsdl", G: "localimport.golden", E: nil},
 }
 
 func NewTestServer(t *testing.T) *httptest.Server {

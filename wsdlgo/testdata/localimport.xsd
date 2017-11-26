@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>	
+<xsd:schema targetNamespace="http://example.com/stockquote.xsd"
+              xmlns:xsd="http://www.w3.org/2000/10/XMLSchema">
+
+
+    <!-- xsd definition: TradePriceRequest [... tickerSymbol string ...] -->
+    <xsd:element name="TradePriceRequest">
+        <xsd:complexType>
+            <xsd:all>
+                <xsd:element name="tickerSymbol" type="string"/>
+            </xsd:all>
+        </xsd:complexType>
+    </xsd:element>
+
+
+    <!-- xsd definition: TradePrice [... price float ...] -->
+    <xsd:element name="TradePrice">
+        <xsd:complexType>
+            <xsd:all>
+                <xsd:element name="price" type="float"/>
+            </xsd:all>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

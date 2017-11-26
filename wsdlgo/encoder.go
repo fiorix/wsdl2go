@@ -280,13 +280,25 @@ func (ge *goEncoder) importRemote(url string, v interface{}) error {
 		return nil
 	}
 
-	resp, err := ge.http.Get(url)
-	if err != nil {
-		return err
+	var r io.Reader
+	if strings.HasPrefix(url, "http") {
+		resp, err := ge.http.Get(url)
+		if err != nil {
+			return err
+		}
+		ge.importedSchemas[url] = true
+		defer resp.Body.Close()
+		r = resp.Body
+	} else {
+		file, err := os.Open(url)
+		if err != nil {
+			return err
+		}
+
+		r = bufio.NewReader(file)
 	}
-	ge.importedSchemas[url] = true
-	defer resp.Body.Close()
-	return xml.NewDecoder(resp.Body).Decode(v)
+	return xml.NewDecoder(r).Decode(v)
+
 }
 
 func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {
