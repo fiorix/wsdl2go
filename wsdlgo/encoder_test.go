@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/fiorix/wsdl2go/wsdl"
@@ -22,7 +23,14 @@ func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions
 		t.Errorf("missing wsdl file %q: %v", filename, err)
 	}
 	defer f.Close()
-	d, err := wsdl.Unmarshal(f)
+
+	// replace CURRENT_DIR in wsdl with the current working directory
+	// - for testing file: schema
+	ba, _ := ioutil.ReadAll(f)
+	pwd, _ := os.Getwd()
+	s := strings.Replace(string(ba), "CURRENT_DIR", pwd, 1)
+
+	d, err := wsdl.Unmarshal(strings.NewReader(s))
 	if err != want {
 		t.Errorf("%q failed: want %v, have %v", filename, want, err)
 	}
@@ -44,6 +52,7 @@ var EncoderCases = []struct {
 	{F: "importer.wsdl", G: "memcache.golden", E: nil},
 	{F: "data.wsdl", G: "data.golden", E: nil},
 	{F: "localimport.wsdl", G: "localimport.golden", E: nil},
+	{F: "localimport-url.wsdl", G: "localimport.golden", E: nil},
 }
 
 func NewTestServer(t *testing.T) *httptest.Server {
