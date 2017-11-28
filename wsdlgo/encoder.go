@@ -14,6 +14,7 @@ import (
 	"go/token"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -274,19 +275,37 @@ func (ge *goEncoder) unionSchemasData(d *wsdl.Definitions, s *wsdl.Schema) {
 }
 
 // download xml from url, decode in v.
-func (ge *goEncoder) importRemote(url string, v interface{}) error {
-	_, alreadyImported := ge.importedSchemas[url]
+func (ge *goEncoder) importRemote(loc string, v interface{}) error {
+	_, alreadyImported := ge.importedSchemas[loc]
 	if alreadyImported {
 		return nil
 	}
 
-	resp, err := ge.http.Get(url)
+	u, err := url.Parse(loc)
 	if err != nil {
 		return err
 	}
-	ge.importedSchemas[url] = true
-	defer resp.Body.Close()
-	return xml.NewDecoder(resp.Body).Decode(v)
+
+	var r io.Reader
+	switch u.Scheme {
+	case "http", "https":
+		resp, err := ge.http.Get(loc)
+		if err != nil {
+			return err
+		}
+		ge.importedSchemas[loc] = true
+		defer resp.Body.Close()
+		r = resp.Body
+	default:
+		file, err := os.Open(u.Path)
+		if err != nil {
+			return fmt.Errorf("could not open file raw: %s path: %s escaped: %s : %v", u.RawPath, u.Path, u.EscapedPath(), err)
+		}
+
+		r = bufio.NewReader(file)
+	}
+	return xml.NewDecoder(r).Decode(v)
+
 }
 
 func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {

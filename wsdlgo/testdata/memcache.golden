@@ -37,16 +37,16 @@ type GetMultiResponse struct {
 
 // GetResponse carries value and TTL.
 type GetResponse struct {
-	Value string   `xml:"Value,omitempty" json:"Value,omitempty" yaml:"Value,omitempty"`
-	TTL   Duration `xml:"TTL,omitempty" json:"TTL,omitempty" yaml:"TTL,omitempty"`
+	Value *string   `xml:"Value,omitempty" json:"Value,omitempty" yaml:"Value,omitempty"`
+	TTL   *Duration `xml:"TTL,omitempty" json:"TTL,omitempty" yaml:"TTL,omitempty"`
 }
 
 // SetRequest carries a key-value pair.
 type SetRequest struct {
-	XMLName    xml.Name `xml:"http://localhost:8080/MemoryService.wsdl SetRequest" json:"-" yaml:"-"`
-	Key        string   `xml:"Key" json:"Key" yaml:"Key"`
-	Value      string   `xml:"Value" json:"Value" yaml:"Value"`
-	Expiration Duration `xml:"Expiration,omitempty" json:"Expiration,omitempty" yaml:"Expiration,omitempty"`
+	XMLName    xml.Name  `xml:"http://localhost:8080/MemoryService.wsdl SetRequest" json:"-" yaml:"-"`
+	Key        string    `xml:"Key" json:"Key" yaml:"Key"`
+	Value      string    `xml:"Value" json:"Value" yaml:"Value"`
+	Expiration *Duration `xml:"Expiration,omitempty" json:"Expiration,omitempty" yaml:"Expiration,omitempty"`
 }
 
 // GetMultiRequest was auto-generated from WSDL.
