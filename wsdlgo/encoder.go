@@ -1014,7 +1014,7 @@ func (ge *goEncoder) genGoXMLTypeFunction(w io.Writer, ct *wsdl.ComplexType) {
 	ext := ct.ComplexContent.Extension
 	if ext.Base != "" {
 		ge.writeComments(w, "SetXMLType", "")
-		fmt.Fprintf(w, "func (t *%s) SetXMLType() {\n", ct.Name)
+		fmt.Fprintf(w, "func (t *%s) SetXMLType() {\n", strings.Title(ct.Name))
 		fmt.Fprintf(w, "t.TypeAttrXSI = \"objtype:%s\"\n", ct.Name)
 		fmt.Fprintf(w, "t.TypeNamespace = \"%s\"\n}\n\n", ct.TargetNamespace)
 	}
