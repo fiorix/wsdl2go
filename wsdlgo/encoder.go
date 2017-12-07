@@ -31,6 +31,9 @@ type Encoder interface {
 	// Encode generates Go code from d.
 	Encode(d *wsdl.Definitions) error
 
+	// SetPackageName sets some fmt.Stringer that can produce package name
+	SetPackageName(packageName fmt.Stringer)
+
 	// SetClient records the given http client that
 	// is used when fetching remote parts of WSDL
 	// and WSDL schemas.
@@ -43,6 +46,9 @@ type goEncoder struct {
 
 	// http client
 	http *http.Client
+
+	// some mechanism to name package
+	packageName fmt.Stringer
 
 	// types cache
 	stypes map[string]*wsdl.SimpleType
@@ -91,6 +97,10 @@ func NewEncoder(w io.Writer) Encoder {
 	}
 }
 
+func (ge *goEncoder) SetPackageName(name fmt.Stringer) {
+	ge.packageName = name
+}
+
 func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
 }
@@ -108,6 +118,12 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	if d == nil {
 		return nil
 	}
+
+	// default mechanism to set package name
+	if ge.packageName == nil {
+		ge.packageName = BindingPackageName(d.Binding)
+	}
+
 	var b bytes.Buffer
 	err := ge.encode(&b, d)
 	if err != nil {
@@ -166,10 +182,7 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	ge.cacheFuncs(d)
 	ge.cacheMessages(d)
 	ge.cacheSOAPOperations(d)
-	pkg := ge.formatPackageName(d.Binding.Name)
-	if pkg == "" {
-		pkg = "internal"
-	}
+
 	var b bytes.Buffer
 	var ff []func(io.Writer, *wsdl.Definitions) error
 	if len(ge.soapOps) > 0 {
@@ -192,7 +205,8 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 			return err
 		}
 	}
-	fmt.Fprintf(w, "package %s\n\nimport (\n", pkg)
+
+	fmt.Fprintf(w, "package %s\n\nimport (\n", ge.packageName)
 	for pkg := range ge.needsStdPkg {
 		fmt.Fprintf(w, "%q\n", pkg)
 	}
@@ -209,10 +223,6 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	}
 	_, err = io.Copy(w, &b)
 	return err
-}
-
-func (ge *goEncoder) formatPackageName(pkg string) string {
-	return strings.Replace(strings.ToLower(pkg), ".", "", -1)
 }
 
 func (ge *goEncoder) importParts(d *wsdl.Definitions) error {
