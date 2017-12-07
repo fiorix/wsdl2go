@@ -37,6 +37,29 @@
               </xsd:complexType>
            </xsd:element>
 
+           <xsd:element name="GetSessionRequest">
+               <xsd:complexType/>
+           </xsd:element>
+
+           <xsd:element name="GetSessionResponse">
+               <xsd:complexType>
+                   <xsd:all>
+                       <xsd:element name="sessionId" type="string"/>
+                   </xsd:all>
+               </xsd:complexType>
+           </xsd:element>
+
+           <xsd:element name="DestroySessionRequest">
+               <xsd:complexType>
+                   <xsd:all>
+                       <xsd:element name="sessionId" type="string"/>
+                   </xsd:all>
+               </xsd:complexType>
+           </xsd:element>
+
+           <xsd:element name="DestroySessionResponse">
+               <xsd:complexType/>
+           </xsd:element>
        </xsd:schema>
     </wsdl:types>
 
@@ -50,6 +73,24 @@
         <wsdl:part name="body" element="xsd1:TradePrice"/>
     </wsdl:message>
 
+    <wsdl:message name="GetSessionInput">
+        <wsdl:part name="body" element="xsd1:GetSessionRequest"/>
+    </wsdl:message>
+
+    <!-- request GetSessionOutput is of type GetSessionResponse -->
+    <wsdl:message name="GetSessionOutput">
+        <wsdl:part name="body" element="xsd1:GetSessionResponse"/>
+    </wsdl:message>
+
+    <wsdl:message name="DestroySessionInput">
+        <wsdl:part name="body" element="xsd1:DestroySessionRequest"/>
+    </wsdl:message>
+
+    <!-- request DestroySessionOutput is of type DestroySessionResponse -->
+    <wsdl:message name="DestroySessionOutput">
+        <wsdl:part name="body" element="xsd1:DestroySessionResponse"/>
+    </wsdl:message>
+
     <!-- wsdl:portType describes messages in an operation -->
     <wsdl:portType name="StockQuotePortType">
 
@@ -57,6 +98,16 @@
         <wsdl:operation name="GetLastTradePrice">
            <wsdl:input message="tns:GetLastTradePriceInput"/>
            <wsdl:output message="tns:GetLastTradePriceOutput"/>
+        </wsdl:operation>
+
+        <wsdl:operation name="GetSession">
+            <wsdl:input message="tns:GetSessionInput"/>
+            <wsdl:output message="tns:GetSessionOutput"/>
+        </wsdl:operation>
+
+        <wsdl:operation name="DestroySession">
+            <wsdl:input message="tns:DestroySessionInput"/>
+            <wsdl:output message="tns:DestroySessionOutput"/>
         </wsdl:operation>
     </wsdl:portType>
 
@@ -79,6 +130,30 @@
            <wsdl:output>
                <soap:body use="literal"/>
            </wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="GetSession">
+            <!-- again bind to SOAP? @@@ -->
+            <soap:operation soapAction="http://example.com/GetSession"/>
+            <!-- furthur specify that the messages in the wsdl:operation "" use SOAP? @@@ -->
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+
+        <wsdl:operation name="DestroySession">
+            <!-- again bind to SOAP? @@@ -->
+            <soap:operation soapAction="http://example.com/DestroySession"/>
+            <!-- furthur specify that the messages in the wsdl:operation "" use SOAP? @@@ -->
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
         </wsdl:operation>
     </wsdl:binding>
 
