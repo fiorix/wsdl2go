@@ -1,14 +1,20 @@
 <definitions>
+    <message name="newTermValues">
+        <part name="term" type="xs:string"/>
+        <part name="value" type="xs:string"/>
+    </message>
 
-<message name="newTermValues">
-  <part name="term" type="xs:string"/>
-  <part name="value" type="xs:string"/>
-</message>
+    <message name="nothingRequest"/>
 
-<portType name="glossaryTerms">
-  <operation name="setTerm">
-    <input name="newTerm" message="newTermValues"/>
-  </operation>
-</portType >
+    <portType name="glossaryTerms">
+        <operation name="setTerm">
+            <input name="newTerm" message="newTermValues"/>
+        </operation>
 
+        <operation name="setNothing">
+            <input name="something" message="nothingRequest"/>
+        </operation>
+
+        <operation name="doNothing"/>
+    </portType>
 </definitions>
