@@ -128,7 +128,11 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		// read only the first Mb of the body in error case
 		limReader := io.LimitReader(resp.Body, 1024*1024)
 		body, _ := ioutil.ReadAll(limReader)
-		return fmt.Errorf("%q: %q", resp.Status, body)
+		return &HttpError{
+			StatusCode: resp.StatusCode,
+			Status:     resp.Status,
+			Msg:        string(body),
+		}
 	}
 	return xml.NewDecoder(resp.Body).Decode(out)
 }
@@ -183,6 +187,17 @@ func (c *Client) RoundTripSoap12(action string, in, out Message) error {
 		r.Header.Add("Content-Type", fmt.Sprintf("application/soap+xml; charset=utf-8; action=\"%s\"", action))
 	}
 	return doRoundTrip(c, headerFunc, in, out)
+}
+
+//Detailed soap http error
+type HttpError struct {
+	StatusCode int
+	Status     string
+	Msg        string
+}
+
+func (e *HttpError) Error() string {
+	return fmt.Sprintf("%q: %q", e.Status, e.Msg)
 }
 
 // Envelope is a SOAP envelope.
