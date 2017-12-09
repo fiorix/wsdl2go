@@ -16,15 +16,20 @@ import (
 
 var version = "tip"
 
+type options struct {
+	Src      string
+	Dst      string
+	Package  string
+	Insecure bool
+	Version  bool
+}
+
 func main() {
-	opts := struct {
-		Src      string
-		Dst      string
-		Insecure bool
-		Version  bool
-	}{}
+	opts := options{}
+
 	flag.StringVar(&opts.Src, "i", opts.Src, "input file, url, or '-' for stdin")
 	flag.StringVar(&opts.Dst, "o", opts.Dst, "output file, or '-' for stdout")
+	flag.StringVar(&opts.Package, "p", opts.Package, "package name")
 	flag.BoolVar(&opts.Insecure, "yolo", opts.Insecure, "accept invalid https certificates")
 	flag.BoolVar(&opts.Version, "version", opts.Version, "show version and exit")
 	flag.Parse()
@@ -50,18 +55,18 @@ func main() {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	}
-	err := decode(w, opts.Src, cli)
+	err := decode(w, opts, cli)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func decode(w io.Writer, src string, cli *http.Client) error {
+func decode(w io.Writer, opts options, cli *http.Client) error {
 	var err error
 	var f io.ReadCloser
-	if src == "" || src == "-" {
+	if opts.Src == "" || opts.Src == "-" {
 		f = os.Stdin
-	} else if f, err = open(src, cli); err != nil {
+	} else if f, err = open(opts.Src, cli); err != nil {
 		return err
 	}
 	d, err := wsdl.Unmarshal(f)
@@ -69,8 +74,13 @@ func decode(w io.Writer, src string, cli *http.Client) error {
 		return err
 	}
 	f.Close()
+
 	enc := wsdlgo.NewEncoder(w)
 	enc.SetClient(cli)
+	if opts.Package != "" {
+		enc.SetPackageName(wsdlgo.PackageName(opts.Package))
+	}
+
 	return enc.Encode(d)
 }
 
