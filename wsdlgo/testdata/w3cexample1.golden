@@ -5,7 +5,17 @@ import (
 	"errors"
 )
 
+// GetNothing was auto-generated from WSDL.
+func GetNothing(ctx context.Context, something string) (err error) {
+	return errors.New("not implemented")
+}
+
 // GetTerm was auto-generated from WSDL.
 func GetTerm(ctx context.Context, term string) (value string, err error) {
 	return "", errors.New("not implemented")
+}
+
+// GetVoid was auto-generated from WSDL.
+func GetVoid(ctx context.Context, something string) (err error) {
+	return errors.New("not implemented")
 }

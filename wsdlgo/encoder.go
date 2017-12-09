@@ -1054,7 +1054,12 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		return nil
 	}
 	if c > 2 {
-		fmt.Fprintf(w, "type %s struct {}\n\n", name)
+		fmt.Fprintf(w, "type %s struct {\n", name)
+		if elName, ok := ge.needsTag[name]; ok {
+			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
+				d.TargetNamespace, elName)
+		}
+		fmt.Fprintf(w, "}\n\n")
 		return nil
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
