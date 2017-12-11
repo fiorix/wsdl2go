@@ -4,6 +4,10 @@ language: go
 
 go:
   - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - tip
 
 script:
-  - go test -v ./wsdl ./wsdlgo
+  - go test -v -race ./...
