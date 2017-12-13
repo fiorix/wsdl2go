@@ -95,8 +95,8 @@ func open(name string, cli *http.Client) (io.ReadCloser, error) {
 
 // httpClient returns http client with default options
 func httpClient(insecure bool) *http.Client {
-	transport := *(http.DefaultTransport.(*http.Transport))
+	client := &http.Client{}
+	transport := client.Transport.(*http.Transport)
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecure}
-
-	return &http.Client{Transport: &transport}
+	return client
 }
