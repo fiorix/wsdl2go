@@ -16,12 +16,10 @@ func TestBindingPackageName_String(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.expected, func(t *testing.T) {
-			namer := BindingPackageName(test.binding)
-			name := namer.String()
-			if test.expected != name {
-				t.Errorf("BindingPackageName(%s): expected %s, actual %s", t.Name(), test.expected, name)
-			}
-		})
+		namer := BindingPackageName(test.binding)
+		name := namer.String()
+		if test.expected != name {
+			t.Errorf("expected `%s`, actual `%s`", test.expected, name)
+		}
 	}
 }
