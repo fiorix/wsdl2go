@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
-	"time"
 
 	"github.com/fiorix/wsdl2go/wsdl"
 	"github.com/fiorix/wsdl2go/wsdlgo"
@@ -97,19 +95,8 @@ func open(name string, cli *http.Client) (io.ReadCloser, error) {
 
 // httpClient returns http client with default options
 func httpClient(insecure bool) *http.Client {
-	transport := http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
+	client := &http.Client{}
+	transport := client.Transport.(*http.Transport)
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecure}
-
-	return &http.Client{Transport: &transport}
+	return client
 }
