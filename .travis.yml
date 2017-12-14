@@ -4,6 +4,7 @@ language: go
 
 before_script:
   - go vet ./...
+  - golint ./...
 
 go:
   - 1.6
