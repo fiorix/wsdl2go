@@ -128,7 +128,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		// read only the first Mb of the body in error case
 		limReader := io.LimitReader(resp.Body, 1024*1024)
 		body, _ := ioutil.ReadAll(limReader)
-		return &HttpError{
+		return &HTTPError{
 			StatusCode: resp.StatusCode,
 			Status:     resp.Status,
 			Msg:        string(body),
@@ -189,14 +189,14 @@ func (c *Client) RoundTripSoap12(action string, in, out Message) error {
 	return doRoundTrip(c, headerFunc, in, out)
 }
 
-//Detailed soap http error
-type HttpError struct {
+// HTTPError is detailed soap http error
+type HTTPError struct {
 	StatusCode int
 	Status     string
 	Msg        string
 }
 
-func (e *HttpError) Error() string {
+func (e *HTTPError) Error() string {
 	return fmt.Sprintf("%q: %q", e.Status, e.Msg)
 }
 
