@@ -13,13 +13,13 @@ type StructFieldSetXMLData struct {
 	TypeAttrXSI, TypeNamespace string
 }
 
-type SetXmlData struct {
+type SetXMLData struct {
 	TypeAttrXSI, TypeNamespace string
 	Pointer                    *StructFieldSetXMLData
 	Field                      StructFieldSetXMLData
 }
 
-func (s *SetXmlData) SetXMLType() {
+func (s *SetXMLData) SetXMLType() {
 	s.TypeAttrXSI = "test"
 	s.TypeNamespace = "test 1"
 }
@@ -39,7 +39,7 @@ func TestSetXMLType(t *testing.T) {
 	test := &testT{
 		A: "unchanged",
 	}
-	list := []*SetXmlData{{
+	list := []*SetXMLData{{
 		Pointer: &StructFieldSetXMLData{},
 	}, {}}
 	test.B = make([]interfaceT, len(list))
@@ -48,7 +48,7 @@ func TestSetXMLType(t *testing.T) {
 	}
 	setXMLType(reflect.ValueOf(test))
 	for _, interfaceEl := range test.B {
-		el, _ := interfaceEl.(*SetXmlData)
+		el, _ := interfaceEl.(*SetXMLData)
 		if el.TypeAttrXSI != "test" {
 			t.Fatal("TypeAttrXSI not set")
 		}

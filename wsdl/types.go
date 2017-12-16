@@ -22,6 +22,7 @@ type Definitions struct {
 
 type definitionDup Definitions
 
+// UnmarshalXML provides ability to unmarshal SOAP XML definition
 func (def *Definitions) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Space == "xmlns" {
@@ -65,13 +66,13 @@ type Schema struct {
 	Elements        []*Element        `xml:"element"`
 }
 
-// Unmarshaling solution from Matt Harden (http://grokbase.com/t/gg/golang-nuts/14bk21xb7a/go-nuts-extending-encoding-xml-to-capture-unknown-attributes)
+type schemaDup Schema
+
+// UnmarshalXML solution from Matt Harden (http://grokbase.com/t/gg/golang-nuts/14bk21xb7a/go-nuts-extending-encoding-xml-to-capture-unknown-attributes)
 // We duplicate the type Schema here so that we can unmarshal into it
 // without recursively triggering the *Schema.UnmarshalXML method.
 // Other options are to embed tt into Type or declare Type as a synonym for tt.
 // The important thing is that tt is only used directly in *Schema.UnmarshalXML or Schema.MarshalXML.
-type schemaDup Schema
-
 func (schema *Schema) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Space == "xmlns" {
@@ -149,7 +150,7 @@ type Sequence struct {
 	Any          []*AnyElement  `xml:"any"`
 }
 
-// Element describes an element of a given type.
+// Attribute element describes an element of a given type.
 type Attribute struct {
 	XMLName  xml.Name `xml:"attribute"`
 	Name     string   `xml:"name,attr"`
@@ -250,9 +251,9 @@ type BindingOperation struct {
 	Output    *BindingIO      `xml:"output>body"`
 }
 
-// Note - soap12 namespace is important as the presence of a
-// Soap12Operation.SoapAction is used to switch things over to sending
+// Soap12Operation SoapAction is used to switch things over to sending
 // a soap 1.2 content type header (application/xml; charset=UTF-8; action='blah')
+// Note - soap12 namespace is important as the presence of a
 type Soap12Operation struct {
 	XMLName    xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
 	SoapAction string   `xml:"soapAction,attr"`
