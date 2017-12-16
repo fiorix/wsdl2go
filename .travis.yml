@@ -2,8 +2,12 @@ sudo: false
 
 language: go
 
+install:
+  - go get -u github.com/golang/lint/golint
+
 before_script:
   - go vet ./...
+  - golint ./...
 
 go:
   - 1.6

@@ -22,6 +22,7 @@ type Definitions struct {
 
 type definitionDup Definitions
 
+// UnmarshalXML implements the xml.Unmarshaler interface.
 func (def *Definitions) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Space == "xmlns" {
@@ -72,6 +73,7 @@ type Schema struct {
 // The important thing is that tt is only used directly in *Schema.UnmarshalXML or Schema.MarshalXML.
 type schemaDup Schema
 
+// UnmarshalXML implements the xml.Unmarshaler interface.
 func (schema *Schema) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	for _, attr := range start.Attr {
 		if attr.Name.Space == "xmlns" {
@@ -149,7 +151,7 @@ type Sequence struct {
 	Any          []*AnyElement  `xml:"any"`
 }
 
-// Element describes an element of a given type.
+// Attribute describes an attribute of a given type.
 type Attribute struct {
 	XMLName  xml.Name `xml:"attribute"`
 	Name     string   `xml:"name,attr"`
@@ -245,17 +247,18 @@ type Binding struct {
 type BindingOperation struct {
 	XMLName   xml.Name        `xml:"operation"`
 	Name      string          `xml:"name,attr"`
-	Operation Soap12Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	Operation SOAP12Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
 	Input     *BindingIO      `xml:"input>body"`
 	Output    *BindingIO      `xml:"output>body"`
 }
 
-// Note - soap12 namespace is important as the presence of a
-// Soap12Operation.SoapAction is used to switch things over to sending
-// a soap 1.2 content type header (application/xml; charset=UTF-8; action='blah')
-type Soap12Operation struct {
-	XMLName    xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
-	SoapAction string   `xml:"soapAction,attr"`
+// SOAP12Operation describes a SOAP 1.2 operation. The soap12 namespace is
+// important as the presence of a SOAP12Operation.Action is used to switch
+// things over to sending the SOAP 1.2 content type header:
+// (application/xml; charset=UTF-8; action='foobar')
+type SOAP12Operation struct {
+	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	Action  string   `xml:"soapAction,attr"`
 }
 
 // BindingIO describes the IO binding of SOAP operations. See IO for details.

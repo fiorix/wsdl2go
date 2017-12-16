@@ -11,9 +11,10 @@ import (
 	"reflect"
 )
 
+// XSINamespace is a link to the XML Schema instance namespace.
 const XSINamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
-var XMLTyperType reflect.Type = reflect.TypeOf((*XMLTyper)(nil)).Elem()
+var xmlTyperType reflect.Type = reflect.TypeOf((*XMLTyper)(nil)).Elem()
 
 // A RoundTripper executes a request passing the given req as the SOAP
 // envelope body. The HTTP response is then de-serialized onto the resp
@@ -51,6 +52,7 @@ type Client struct {
 	Pre                    func(*http.Request) // Optional hook to modify outbound requests
 }
 
+// XMLTyper is an abstract interface for types that can set an XML type.
 type XMLTyper interface {
 	SetXMLType()
 }
@@ -66,7 +68,7 @@ func setXMLType(v reflect.Value) {
 		if v.IsNil() {
 			break
 		}
-		ok := v.Type().Implements(XMLTyperType)
+		ok := v.Type().Implements(xmlTyperType)
 		if ok {
 			v.MethodByName("SetXMLType").Call(nil)
 		}
@@ -125,7 +127,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		// read only the first Mb of the body in error case
+		// read only the first MiB of the body in error case
 		limReader := io.LimitReader(resp.Body, 1024*1024)
 		body, _ := ioutil.ReadAll(limReader)
 		return &HTTPError{
@@ -161,7 +163,8 @@ func (c *Client) RoundTrip(in, out Message) error {
 	return doRoundTrip(c, headerFunc, in, out)
 }
 
-// RoundTrip implements the RoundTripper interface.
+// RoundTripWithAction implements the RoundTripper interface for SOAP clients
+// that need to set the SOAPAction header.
 func (c *Client) RoundTripWithAction(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
 		var actionName string
@@ -182,6 +185,7 @@ func (c *Client) RoundTripWithAction(soapAction string, in, out Message) error {
 	return doRoundTrip(c, headerFunc, in, out)
 }
 
+// RoundTripSoap12 implements the RoundTripper interface for SOAP 1.2.
 func (c *Client) RoundTripSoap12(action string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
 		r.Header.Add("Content-Type", fmt.Sprintf("application/soap+xml; charset=utf-8; action=\"%s\"", action))

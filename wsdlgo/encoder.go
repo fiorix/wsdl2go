@@ -597,7 +597,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	}
 	soap12Action := ""
 	if bindingOp, exists := ge.soapOps[op.Name]; exists {
-		soap12Action = bindingOp.Operation.SoapAction
+		soap12Action = bindingOp.Operation.Action
 	}
 	if soap12Action != "" {
 		soap12FuncT.Execute(w, &struct {
