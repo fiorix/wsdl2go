@@ -1025,8 +1025,16 @@ func (ge *goEncoder) genGoXMLTypeFunction(w io.Writer, ct *wsdl.ComplexType) {
 	if ext.Base != "" && !ct.Abstract {
 		ge.writeComments(w, "SetXMLType", "")
 		fmt.Fprintf(w, "func (t *%s) SetXMLType() {\n", strings.Title(ct.Name))
-		fmt.Fprintf(w, "t.TypeAttrXSI = \"objtype:%s\"\n", ct.Name)
-		fmt.Fprintf(w, "t.TypeNamespace = \"%s\"\n}\n\n", ct.TargetNamespace)
+		fmt.Fprintf(w, "if t.OverrideTypeAttrXSI != nil {\n")
+		fmt.Fprintf(w, "    t.TypeAttrXSI = *t.OverrideTypeAttrXSI\n")
+		fmt.Fprintf(w, "} else {\n")
+		fmt.Fprintf(w, "    t.TypeAttrXSI = \"objtype:%s\"\n", ct.Name)
+		fmt.Fprintf(w, "}\n")
+		fmt.Fprintf(w, "if t.OverrideTypeNamespace != nil {\n")
+		fmt.Fprintf(w, "    t.TypeNamespace = *t.OverrideTypeNamespace\n")
+		fmt.Fprintf(w, "} else {\n")
+		fmt.Fprintf(w, "    t.TypeNamespace = \"%s\"\n", ct.TargetNamespace)
+		fmt.Fprintf(w, "}\n}\n\n")
 	}
 }
 
@@ -1072,6 +1080,9 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	if ct.ComplexContent != nil && ct.ComplexContent.Extension != nil {
 		fmt.Fprint(w, "TypeAttrXSI   string `xml:\"xsi:type,attr,omitempty\"`\n")
 		fmt.Fprint(w, "TypeNamespace string `xml:\"xmlns:objtype,attr,omitempty\"`\n")
+		fmt.Fprint(w, "\n")
+		fmt.Fprint(w, "OverrideTypeAttrXSI   *string `xml:\"-\"`\n")
+		fmt.Fprint(w, "OverrideTypeNamespace *string `xml:\"-\"`\n")
 	}
 	if err != nil {
 		return err
