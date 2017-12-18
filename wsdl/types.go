@@ -245,11 +245,12 @@ type Binding struct {
 // BindingOperation describes the requirement for binding SOAP to WSDL
 // operations.
 type BindingOperation struct {
-	XMLName   xml.Name        `xml:"operation"`
-	Name      string          `xml:"name,attr"`
-	Operation SOAP12Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
-	Input     *BindingIO      `xml:"input>body"`
-	Output    *BindingIO      `xml:"output>body"`
+	XMLName     xml.Name        `xml:"operation"`
+	Name        string          `xml:"name,attr"`
+	Operation   SOAP12Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	Operation11 SOAP11Operation `xml:"http://schemas.xmlsoap.org/wsdl/soap/ operation"`
+	Input       *BindingIO      `xml:"input>body"`
+	Output      *BindingIO      `xml:"output>body"`
 }
 
 // SOAP12Operation describes a SOAP 1.2 operation. The soap12 namespace is
@@ -258,6 +259,13 @@ type BindingOperation struct {
 // (application/xml; charset=UTF-8; action='foobar')
 type SOAP12Operation struct {
 	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap12/ operation"`
+	Action  string   `xml:"soapAction,attr"`
+}
+
+// SOSAP11Operation describes a SOAP 1.1 operation.  If it is specified in the wsdl,
+// the soapAction will use this value instead of the default value
+type SOAP11Operation struct {
+	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap/ operation"`
 	Action  string   `xml:"soapAction,attr"`
 }
 
