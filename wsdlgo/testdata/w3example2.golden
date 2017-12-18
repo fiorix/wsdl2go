@@ -71,7 +71,7 @@ func (p *stockQuotePortType) DestroySession(α *DestroySessionRequest) (β *Dest
 			M DestroySessionResponse `xml:"DestroySessionResponse"`
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("DestroySession", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("http://example.com/DestroySession", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
@@ -85,7 +85,7 @@ func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *Trade
 			M TradePrice `xml:"TradePrice"`
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("GetLastTradePrice", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
@@ -99,7 +99,7 @@ func (p *stockQuotePortType) GetSession(α *GetSessionRequest) (β *GetSessionRe
 			M GetSessionResponse `xml:"GetSessionResponse"`
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("GetSession", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("http://example.com/GetSession", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
