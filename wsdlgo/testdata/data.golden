@@ -42,12 +42,23 @@ type DataGenerationReq struct {
 	WithCreditTranferForm *bool                 `xml:"withCreditTranferForm,omitempty" json:"withCreditTranferForm,omitempty" yaml:"withCreditTranferForm,omitempty"`
 	TypeAttrXSI           string                `xml:"xsi:type,attr,omitempty"`
 	TypeNamespace         string                `xml:"xmlns:objtype,attr,omitempty"`
+
+	OverrideTypeAttrXSI   *string `xml:"-"`
+	OverrideTypeNamespace *string `xml:"-"`
 }
 
 // SetXMLType was auto-generated from WSDL.
 func (t *DataGenerationReq) SetXMLType() {
-	t.TypeAttrXSI = "objtype:DataGenerationReq"
-	t.TypeNamespace = "http://pdf.host.com/xsd"
+	if t.OverrideTypeAttrXSI != nil {
+		t.TypeAttrXSI = *t.OverrideTypeAttrXSI
+	} else {
+		t.TypeAttrXSI = "objtype:DataGenerationReq"
+	}
+	if t.OverrideTypeNamespace != nil {
+		t.TypeNamespace = *t.OverrideTypeNamespace
+	} else {
+		t.TypeNamespace = "http://pdf.host.com/xsd"
+	}
 }
 
 // DataGenerationResp was auto-generated from WSDL.
@@ -58,12 +69,23 @@ type DataGenerationResp struct {
 	Url           *string       `xml:"url,omitempty" json:"url,omitempty" yaml:"url,omitempty"`
 	TypeAttrXSI   string        `xml:"xsi:type,attr,omitempty"`
 	TypeNamespace string        `xml:"xmlns:objtype,attr,omitempty"`
+
+	OverrideTypeAttrXSI   *string `xml:"-"`
+	OverrideTypeNamespace *string `xml:"-"`
 }
 
 // SetXMLType was auto-generated from WSDL.
 func (t *DataGenerationResp) SetXMLType() {
-	t.TypeAttrXSI = "objtype:DataGenerationResp"
-	t.TypeNamespace = "http://pdf.host.com/xsd"
+	if t.OverrideTypeAttrXSI != nil {
+		t.TypeAttrXSI = *t.OverrideTypeAttrXSI
+	} else {
+		t.TypeAttrXSI = "objtype:DataGenerationResp"
+	}
+	if t.OverrideTypeNamespace != nil {
+		t.TypeNamespace = *t.OverrideTypeNamespace
+	} else {
+		t.TypeNamespace = "http://pdf.host.com/xsd"
+	}
 }
 
 // GetData was auto-generated from WSDL.
