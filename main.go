@@ -17,11 +17,12 @@ import (
 var version = "tip"
 
 type options struct {
-	Src      string
-	Dst      string
-	Package  string
-	Insecure bool
-	Version  bool
+	Src       string
+	Dst       string
+	Package   string
+	Namespace string
+	Insecure  bool
+	Version   bool
 }
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 
 	flag.StringVar(&opts.Src, "i", opts.Src, "input file, url, or '-' for stdin")
 	flag.StringVar(&opts.Dst, "o", opts.Dst, "output file, or '-' for stdout")
+	flag.StringVar(&opts.Namespace, "n", opts.Namespace, "override namespace")
 	flag.StringVar(&opts.Package, "p", opts.Package, "package name")
 	flag.BoolVar(&opts.Insecure, "yolo", opts.Insecure, "accept invalid https certificates")
 	flag.BoolVar(&opts.Version, "version", opts.Version, "show version and exit")
@@ -76,6 +78,9 @@ func decode(w io.Writer, opts options, cli *http.Client) error {
 	enc.SetClient(cli)
 	if opts.Package != "" {
 		enc.SetPackageName(wsdlgo.PackageName(opts.Package))
+	}
+	if opts.Namespace != "" {
+		enc.SetLocalNamespace(opts.Namespace)
 	}
 
 	return enc.Encode(d)
