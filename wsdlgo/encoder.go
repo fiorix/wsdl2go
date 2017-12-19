@@ -38,6 +38,10 @@ type Encoder interface {
 	// is used when fetching remote parts of WSDL
 	// and WSDL schemas.
 	SetClient(c *http.Client)
+
+	// SetLocalNamespace allows overriding of the Namespace in XMLName instead
+	// of the one specified in wsdl
+	SetLocalNamespace(namespace string)
 }
 
 type goEncoder struct {
@@ -77,6 +81,9 @@ type goEncoder struct {
 	needsExtPkg       map[string]bool
 	importedSchemas   map[string]bool
 	usedNamespaces    map[string]string
+
+	// localNamespace allows overriding of namespace in XMLName
+	localNamespace string
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
@@ -1030,6 +1037,19 @@ func (ge *goEncoder) genGoXMLTypeFunction(w io.Writer, ct *wsdl.ComplexType) {
 	}
 }
 
+// helper function to print out the XMLName
+func (ge *goEncoder) genXMLName(w io.Writer, targetNamespace string, name string) {
+	if elName, ok := ge.needsTag[name]; ok {
+		if ge.localNamespace == "" {
+			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
+				targetNamespace, elName)
+		} else {
+			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s:%s\" json:\"-\" yaml:\"-\"`\n",
+				ge.localNamespace, elName)
+		}
+	}
+}
+
 func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
 	c := 0
 	if len(ct.AllElements) == 0 {
@@ -1055,18 +1075,12 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	}
 	if c > 2 {
 		fmt.Fprintf(w, "type %s struct {\n", name)
-		if elName, ok := ge.needsTag[name]; ok {
-			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
-				d.TargetNamespace, elName)
-		}
+		ge.genXMLName(w, d.TargetNamespace, name)
 		fmt.Fprintf(w, "}\n\n")
 		return nil
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
-	if elName, ok := ge.needsTag[name]; ok {
-		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
-			d.TargetNamespace, elName)
-	}
+	ge.genXMLName(w, d.TargetNamespace, name)
 	err := ge.genStructFields(w, d, ct)
 
 	if ct.ComplexContent != nil && ct.ComplexContent.Extension != nil {
@@ -1235,4 +1249,9 @@ func (ge *goEncoder) writeComments(w io.Writer, typeName, comment string) {
 		fmt.Fprintf(w, "%s\n", line)
 	}
 	return
+}
+
+// SetLocalNamespace allows overridding of namespace in XMLName
+func (ge *goEncoder) SetLocalNamespace(s string) {
+	ge.localNamespace = s
 }
