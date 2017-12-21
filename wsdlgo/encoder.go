@@ -564,7 +564,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 }
 `))
 
-var soap11FuncT = template.Must(template.New("soapFunc11").Parse(
+var soapActionFuncT = template.Must(template.New("soapActionFunc").Parse(
 	`func (p *{{.PortType}}) {{.Name}}({{.Input}}) ({{.Output}}) {
 	γ := struct {
 		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
@@ -572,22 +572,7 @@ var soap11FuncT = template.Must(template.New("soapFunc11").Parse(
 			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("{{.Action}}", α, &γ); err != nil {
-		return {{.RetDef}}, err
-	}
-	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
-}
-`))
-
-var soap12FuncT = template.Must(template.New("soapFunc12").Parse(
-	`func (p *{{.PortType}}) {{.Name}}({{.Input}}) ({{.Output}}) {
-	γ := struct {
-		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
-		Body    struct {
-			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
-		}
-	}{}
-	if err = p.cli.RoundTripSoap12("{{.Action}}", α, &γ); err != nil {
+	if err = p.cli.{{.RoundTripType}}("{{.Action}}", α, &γ); err != nil {
 		return {{.RetDef}}, err
 	}
 	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
@@ -610,14 +595,18 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	if strings.HasPrefix(ret[0], "&") {
 		ret[0] = "nil"
 	}
-	soap12Action := ""
-	soap11Action := ""
+	soapFunctionName := "RoundTripSoap12"
+	soapAction := ""
 	if bindingOp, exists := ge.soapOps[op.Name]; exists {
-		soap12Action = bindingOp.Operation.Action
-		soap11Action = bindingOp.Operation11.Action
+		soapAction = bindingOp.Operation.Action
+		if soapAction == "" {
+			soapFunctionName = "RoundTripWithAction"
+			soapAction = bindingOp.Operation11.Action
+		}
 	}
-	if soap12Action != "" {
-		soap12FuncT.Execute(w, &struct {
+	if soapAction != "" {
+		soapActionFuncT.Execute(w, &struct {
+			RoundTripType string
 			Action        string
 			PortType      string
 			Name          string
@@ -628,7 +617,8 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			RetPtr        bool
 			RetDef        string
 		}{
-			soap12Action,
+			soapFunctionName,
+			soapAction,
 			strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
 			strings.Title(op.Name),
 			strings.Join(in, ","),
@@ -639,31 +629,6 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			ret[0],
 		})
 		return true
-	}
-	if soap11Action != "" {
-		soap11FuncT.Execute(w, &struct {
-			Action        string
-			PortType      string
-			Name          string
-			Input         string
-			Output        string
-			OutputType    string
-			XMLOutputType string
-			RetPtr        bool
-			RetDef        string
-		}{
-			soap11Action,
-			strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
-			strings.Title(op.Name),
-			strings.Join(in, ","),
-			strings.Join(out, ","),
-			strings.TrimPrefix(typ[1], "*"),
-			strings.TrimPrefix(xmlToken, "*"),
-			typ[1][0] == '*',
-			ret[0],
-		})
-		return true
-
 	}
 	soapFuncT.Execute(w, &struct {
 		PortType      string

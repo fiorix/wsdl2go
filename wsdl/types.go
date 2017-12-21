@@ -262,7 +262,7 @@ type SOAP12Operation struct {
 	Action  string   `xml:"soapAction,attr"`
 }
 
-// SOSAP11Operation describes a SOAP 1.1 operation.  If it is specified in the wsdl,
+// SOAP11Operation describes a SOAP 1.1 operation.  If it is specified in the wsdl,
 // the soapAction will use this value instead of the default value
 type SOAP11Operation struct {
 	XMLName xml.Name `xml:"http://schemas.xmlsoap.org/wsdl/soap/ operation"`
