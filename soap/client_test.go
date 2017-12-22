@@ -68,7 +68,7 @@ func TestSetXMLType(t *testing.T) {
 
 func TestRoundTrip(t *testing.T) {
 	type msgT struct{ A, B string }
-	type envT struct{ Body struct{ Message msgT } }
+	type envT struct{ msgT }
 	echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			http.NotFound(w, r)
@@ -122,9 +122,9 @@ func TestRoundTrip(t *testing.T) {
 			t.Errorf("test %d: response to %#v is not an envelope", i, tc.In)
 			continue
 		}
-		if !reflect.DeepEqual(env.Body.Message, *tc.In.(*msgT)) {
+		if !reflect.DeepEqual(env.msgT, *tc.In.(*msgT)) {
 			t.Errorf("test %d: message mismatch\nwant: %#v\nhave: %#v",
-				i, tc.In, &env.Body.Message)
+				i, tc.In, &env.msgT)
 			continue
 		}
 	}
@@ -132,7 +132,7 @@ func TestRoundTrip(t *testing.T) {
 
 func TestRoundTripWithAction(t *testing.T) {
 	type msgT struct{ A, B string }
-	type envT struct{ Body struct{ Message msgT } }
+	type envT struct{ msgT }
 	echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			http.NotFound(w, r)
@@ -186,9 +186,9 @@ func TestRoundTripWithAction(t *testing.T) {
 			t.Errorf("test %d: response to %#v is not an envelope", i, tc.In)
 			continue
 		}
-		if !reflect.DeepEqual(env.Body.Message, *tc.In.(*msgT)) {
+		if !reflect.DeepEqual(env.msgT, *tc.In.(*msgT)) {
 			t.Errorf("test %d: message mismatch\nwant: %#v\nhave: %#v",
-				i, tc.In, &env.Body.Message)
+				i, tc.In, &env.msgT)
 			continue
 		}
 	}
@@ -196,7 +196,7 @@ func TestRoundTripWithAction(t *testing.T) {
 
 func TestRoundTripSoap12(t *testing.T) {
 	type msgT struct{ A, B string }
-	type envT struct{ Body struct{ Message msgT } }
+	type envT struct{ msgT }
 	testAction := "http://foo.bar.com"
 
 	echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -254,9 +254,9 @@ func TestRoundTripSoap12(t *testing.T) {
 			t.Errorf("test %d: response to %#v is not an envelope", i, tc.In)
 			continue
 		}
-		if !reflect.DeepEqual(env.Body.Message, *tc.In.(*msgT)) {
+		if !reflect.DeepEqual(env.msgT, *tc.In.(*msgT)) {
 			t.Errorf("test %d: message mismatch\nwant: %#v\nhave: %#v",
-				i, tc.In, &env.Body.Message)
+				i, tc.In, &env.msgT)
 			continue
 		}
 	}
