@@ -44,6 +44,7 @@ type AuthHeader struct {
 type Client struct {
 	URL                    string              // URL of the server
 	Namespace              string              // SOAP Namespace
+	ThisNamespace          string              // SOAP This-Namespace (tns)
 	ExcludeActionNamespace bool                // Include Namespace to SOAP Action header
 	Envelope               string              // Optional SOAP Envelope
 	Header                 Header              // Optional SOAP Header
@@ -93,9 +94,10 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
 		NSAttr:       c.Namespace,
+		TNSAttr:      c.ThisNamespace,
 		XSIAttr:      XSINamespace,
 		Header:       c.Header,
-		Body:         Body{Message: in},
+		Body:         in,
 	}
 
 	if req.EnvelopeAttr == "" {
@@ -103,6 +105,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	}
 	if req.NSAttr == "" {
 		req.NSAttr = c.URL
+	}
+	if req.TNSAttr == "" {
+		req.TNSAttr = req.NSAttr
 	}
 	var b bytes.Buffer
 	err := xml.NewEncoder(&b).Encode(req)
@@ -136,7 +141,13 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 			Msg:        string(body),
 		}
 	}
-	return xml.NewDecoder(resp.Body).Decode(out)
+
+	marshalStructure := struct {
+		XMLName xml.Name `xml:"Envelope"`
+		Body    Message
+	}{Body: out}
+
+	return xml.NewDecoder(resp.Body).Decode(&marshalStructure)
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -209,13 +220,8 @@ type Envelope struct {
 	XMLName      xml.Name `xml:"SOAP-ENV:Envelope"`
 	EnvelopeAttr string   `xml:"xmlns:SOAP-ENV,attr"`
 	NSAttr       string   `xml:"xmlns:ns,attr"`
+	TNSAttr      string   `xml:"xmlns:tns,attr"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"SOAP-ENV:Header"`
-	Body         Body
-}
-
-// Body is the body of a SOAP envelope.
-type Body struct {
-	XMLName xml.Name `xml:"SOAP-ENV:Body"`
-	Message Message
+	Body         Message  `xml:"SOAP-ENV:Body"`
 }

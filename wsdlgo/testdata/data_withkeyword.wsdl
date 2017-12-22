@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ax2179="http://host.com/xsd" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:ns="http://pdf.host.com" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ax2178="http://pdf.host.com/xsd" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://pdf.host.com">
+    <wsdl:documentation>DataEndpoint</wsdl:documentation>
+    <wsdl:types>
+        <xs:schema xmlns:ax2181="http://pdf.host.com/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://pdf.host.com">
+            <xs:import namespace="http://pdf.host.com/xsd"/>
+            <xs:element name="getData">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="request" nillable="true" type="ax2178:DataGenerationReq"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getDataResp">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="ax2178:DataGenerationResp"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://host.com/xsd">
+            <xs:complexType name="BaseReq">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="clientIdentification" nillable="true" type="ax2179:ClientIdentification"/>
+                </xs:sequence>
+                <xs:attribute name="TestAttr" type="xs:string"></xs:attribute>
+            </xs:complexType>
+            <xs:complexType name="BaseResp">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="errorDetails" nillable="true" type="ax2179:ErrorDetails"/>
+                    <xs:element minOccurs="0" name="success" type="xs:boolean"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema xmlns:ax2180="http://host.com/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://pdf.host.com/xsd">
+            <xs:import namespace="http://host.com/xsd"/>
+            <xs:complexType name="DataGenerationReq">
+                <xs:complexContent>
+                    <xs:extension base="ax2180:BaseReq">
+                        <xs:sequence>
+                            <xs:element minOccurs="0" name="customerAccountNumber" nillable="true" type="xs:string"/>
+                            <xs:element minOccurs="0" name="pdfGenerationReqType" type="xs:int"/>
+                            <xs:element minOccurs="0" name="withCreditTranferForm" type="xs:boolean"/>
+                        </xs:sequence>
+                    </xs:extension>
+                </xs:complexContent>
+            </xs:complexType>
+            <xs:complexType name="DataGenerationResp">
+                <xs:complexContent>
+                    <xs:extension base="ax2180:BaseResp">
+                        <xs:sequence>
+                            <xs:element minOccurs="0" name="pdf" nillable="true" type="xs:base64Binary"/>
+                            <xs:element minOccurs="0" name="url" nillable="true" type="xs:string"/>
+                        </xs:sequence>
+                    </xs:extension>
+                </xs:complexContent>
+            </xs:complexType>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="getDataReq">
+        <wsdl:part name="return" element="ns:getData"/>
+    </wsdl:message>
+    <wsdl:message name="getDataResp">
+        <wsdl:part name="return" element="ns:getDataResp"/>
+    </wsdl:message>
+    <wsdl:portType name="DataEndpointPortType">
+        <wsdl:operation name="getData">
+            <wsdl:input message="ns:getDataReq" wsaw:Action="urn:getData"/>
+            <wsdl:output message="ns:getDataResp" wsaw:Action="urn:getDataResp"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="DataEndpointSoap11Binding" type="ns:DataEndpointPortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getData">
+            <soap:operation soapAction="urn:getData" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="DataEndpointSoap12Binding" type="ns:DataEndpointPortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getData">
+            <soap12:operation soapAction="urn:getData" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="DataEndpointHttpBinding" type="ns:DataEndpointPortType">
+        <http:binding verb="POST"/>
+        <wsdl:operation name="getData">
+            <http:operation location="DataEndpoint/getData"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="getData"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="getData"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="DataEndpoint">
+        <wsdl:port name="DataEndpointHttpSoap11Endpoint" binding="ns:DataEndpointSoap11Binding">
+            <soap:address location="https://apitest.host.com/services/DataEndpoint.DataEndpointHttpSoap11Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="DataEndpointHttpSoap12Endpoint" binding="ns:DataEndpointSoap12Binding">
+            <soap12:address location="https://apitest.host.com/services/DataEndpoint.DataEndpointHttpSoap12Endpoint/"/>
+        </wsdl:port>
+        <wsdl:port name="DataEndpointHttpEndpoint" binding="ns:DataEndpointHttpBinding">
+            <http:address location="https://apitest.host.com/services/DataEndpoint.DataEndpointHttpEndpoint/"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

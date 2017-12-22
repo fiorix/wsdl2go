@@ -1,11 +1,56 @@
 package hello_binding
 
 import (
-	"errors"
-	"context"
+	"github.com/fiorix/wsdl2go/soap"
 )
 
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://www.examples.com/wsdl/HelloService.wsdl"
+
+// NewHello_PortType creates an initializes a Hello_PortType.
+func NewHello_PortType(cli *soap.Client) Hello_PortType {
+	return &hello_PortType{cli}
+}
+
+// Hello_PortType was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type Hello_PortType interface {
+	// SayHello was auto-generated from WSDL.
+	SayHello(firstName string) (string, error)
+}
+
+// Operation wrapper for SayHello.
+// OperationSayHelloRequest was auto-generated from WSDL.
+type OperationSayHelloRequest struct {
+	FirstName *string `xml:"firstName,omitempty" json:"firstName,omitempty" yaml:"firstName,omitempty"`
+}
+
+// Operation wrapper for SayHello.
+// OperationSayHelloResponse was auto-generated from WSDL.
+type OperationSayHelloResponse struct {
+	Greeting *string `xml:"greeting,omitempty" json:"greeting,omitempty" yaml:"greeting,omitempty"`
+}
+
+// hello_PortType implements the Hello_PortType interface.
+type hello_PortType struct {
+	cli *soap.Client
+}
+
 // SayHello was auto-generated from WSDL.
-func SayHello(ctx context.Context, firstName string) (greeting string, err error) {
-	return "", errors.New("not implemented")
+func (p *hello_PortType) SayHello(firstName string) (string, error) {
+	α := struct {
+		M OperationSayHelloRequest `xml:"tns:sayHello"`
+	}{
+		OperationSayHelloRequest{
+			&firstName,
+		},
+	}
+
+	γ := struct {
+		M OperationSayHelloResponse `xml:"sayHelloResponse"`
+	}{}
+	if err := p.cli.RoundTripWithAction("sayHello", α, &γ); err != nil {
+		return "", err
+	}
+	return *γ.M.Greeting, nil
 }

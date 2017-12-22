@@ -236,10 +236,17 @@ type IO struct {
 
 // Binding describes SOAP to WSDL binding.
 type Binding struct {
-	XMLName    xml.Name            `xml:"binding"`
-	Name       string              `xml:"name,attr"`
-	Type       string              `xml:"type,attr"`
-	Operations []*BindingOperation `xml:"operation"`
+	XMLName     xml.Name            `xml:"binding"`
+	Name        string              `xml:"name,attr"`
+	Type        string              `xml:"type,attr"`
+	BindingType *BindingType        `xml:"binding"`
+	Operations  []*BindingOperation `xml:"operation"`
+}
+
+// BindingType contains additional meta data on how to implement the binding.
+type BindingType struct {
+	Style     string `xml:"style,attr"`
+	Transport string `xml:"transport,attr"`
 }
 
 // BindingOperation describes the requirement for binding SOAP to WSDL

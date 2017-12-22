@@ -6,16 +6,16 @@ import (
 )
 
 // DoNothing was auto-generated from WSDL.
-func DoNothing(ctx context.Context) (err error) {
+func DoNothing(ctx context.Context) error {
 	return errors.New("not implemented")
 }
 
 // SetNothing was auto-generated from WSDL.
-func SetNothing(ctx context.Context) (err error) {
+func SetNothing(ctx context.Context) error {
 	return errors.New("not implemented")
 }
 
 // SetTerm was auto-generated from WSDL.
-func SetTerm(ctx context.Context, term string, value string) (err error) {
+func SetTerm(ctx context.Context, term string, value string) error {
 	return errors.New("not implemented")
 }
