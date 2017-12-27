@@ -1,31 +1,18 @@
 <definitions>
-    <message name="getTermRequest">
-        <part name="term" type="xs:string"/>
-    </message>
 
-    <message name="getTermResponse">
-        <part name="value" type="xs:string"/>
-    </message>
+<message name="getTermRequest">
+  <part name="term" type="xs:string"/>
+</message>
 
-    <message name="getNothingRequest">
-        <part name="something" type="xs:string"/>
-    </message>
+<message name="getTermResponse">
+  <part name="value" type="xs:string"/>
+</message>
 
-    <message name="getNothingResponse"/>
+<portType name="glossaryTerms">
+  <operation name="getTerm">
+    <input message="getTermRequest"/>
+    <output message="getTermResponse"/>
+  </operation>
+</portType>
 
-    <portType name="glossaryTerms">
-        <operation name="getTerm">
-            <input message="getTermRequest"/>
-            <output message="getTermResponse"/>
-        </operation>
-
-        <operation name="getNothing">
-            <input message="getNothingRequest"/>
-            <output message="getNothingResponse"/>
-        </operation>
-
-        <operation name="getVoid">
-            <input message="getNothingRequest"/>
-        </operation>
-    </portType>
 </definitions>

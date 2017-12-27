@@ -51,7 +51,7 @@ func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(α *GetEndorsingBoarde
 			M GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse"`
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("http://www.snowboard-info.com/EndorsementSearch", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("GetEndorsingBoarder", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil
