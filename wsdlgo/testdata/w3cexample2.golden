@@ -5,16 +5,6 @@ import (
 	"errors"
 )
 
-// DoNothing was auto-generated from WSDL.
-func DoNothing(ctx context.Context) (err error) {
-	return errors.New("not implemented")
-}
-
-// SetNothing was auto-generated from WSDL.
-func SetNothing(ctx context.Context) (err error) {
-	return errors.New("not implemented")
-}
-
 // SetTerm was auto-generated from WSDL.
 func SetTerm(ctx context.Context, term string, value string) (err error) {
 	return errors.New("not implemented")

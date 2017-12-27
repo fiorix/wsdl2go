@@ -17,34 +17,8 @@ func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
 // StockQuotePortType was auto-generated from WSDL
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
-	// DestroySession was auto-generated from WSDL.
-	DestroySession(α *DestroySessionRequest) (β *DestroySessionResponse, err error)
-
 	// GetLastTradePrice was auto-generated from WSDL.
 	GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error)
-
-	// GetSession was auto-generated from WSDL.
-	GetSession(α *GetSessionRequest) (β *GetSessionResponse, err error)
-}
-
-// DestroySessionRequest was auto-generated from WSDL.
-type DestroySessionRequest struct {
-	XMLName   xml.Name `xml:"http://example.com/stockquote.wsdl DestroySessionRequest" json:"-" yaml:"-"`
-	SessionId *string  `xml:"sessionId,omitempty" json:"sessionId,omitempty" yaml:"sessionId,omitempty"`
-}
-
-// DestroySessionResponse was auto-generated from WSDL.
-type DestroySessionResponse struct {
-}
-
-// GetSessionRequest was auto-generated from WSDL.
-type GetSessionRequest struct {
-	XMLName xml.Name `xml:"http://example.com/stockquote.wsdl GetSessionRequest" json:"-" yaml:"-"`
-}
-
-// GetSessionResponse was auto-generated from WSDL.
-type GetSessionResponse struct {
-	SessionId *string `xml:"sessionId,omitempty" json:"sessionId,omitempty" yaml:"sessionId,omitempty"`
 }
 
 // TradePrice was auto-generated from WSDL.
@@ -63,20 +37,6 @@ type stockQuotePortType struct {
 	cli *soap.Client
 }
 
-// DestroySession was auto-generated from WSDL.
-func (p *stockQuotePortType) DestroySession(α *DestroySessionRequest) (β *DestroySessionResponse, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M DestroySessionResponse `xml:"DestroySessionResponse"`
-		}
-	}{}
-	if err = p.cli.RoundTripWithAction("http://example.com/DestroySession", α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
 // GetLastTradePrice was auto-generated from WSDL.
 func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *TradePrice, err error) {
 	γ := struct {
@@ -85,21 +45,7 @@ func (p *stockQuotePortType) GetLastTradePrice(α *TradePriceRequest) (β *Trade
 			M TradePrice `xml:"TradePrice"`
 		}
 	}{}
-	if err = p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
-		return nil, err
-	}
-	return &γ.Body.M, nil
-}
-
-// GetSession was auto-generated from WSDL.
-func (p *stockQuotePortType) GetSession(α *GetSessionRequest) (β *GetSessionResponse, err error) {
-	γ := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    struct {
-			M GetSessionResponse `xml:"GetSessionResponse"`
-		}
-	}{}
-	if err = p.cli.RoundTripWithAction("http://example.com/GetSession", α, &γ); err != nil {
+	if err = p.cli.RoundTripWithAction("GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
 	return &γ.Body.M, nil

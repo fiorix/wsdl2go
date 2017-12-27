@@ -31,17 +31,10 @@ type Encoder interface {
 	// Encode generates Go code from d.
 	Encode(d *wsdl.Definitions) error
 
-	// SetPackageName sets some fmt.Stringer that can produce package name
-	SetPackageName(packageName fmt.Stringer)
-
 	// SetClient records the given http client that
 	// is used when fetching remote parts of WSDL
 	// and WSDL schemas.
 	SetClient(c *http.Client)
-
-	// SetLocalNamespace allows overriding of the Namespace in XMLName instead
-	// of the one specified in wsdl
-	SetLocalNamespace(namespace string)
 }
 
 type goEncoder struct {
@@ -50,9 +43,6 @@ type goEncoder struct {
 
 	// http client
 	http *http.Client
-
-	// some mechanism to name package
-	packageName fmt.Stringer
 
 	// types cache
 	stypes map[string]*wsdl.SimpleType
@@ -81,9 +71,6 @@ type goEncoder struct {
 	needsExtPkg       map[string]bool
 	importedSchemas   map[string]bool
 	usedNamespaces    map[string]string
-
-	// localNamespace allows overriding of namespace in XMLName
-	localNamespace string
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
@@ -104,10 +91,6 @@ func NewEncoder(w io.Writer) Encoder {
 	}
 }
 
-func (ge *goEncoder) SetPackageName(name fmt.Stringer) {
-	ge.packageName = name
-}
-
 func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
 }
@@ -125,12 +108,6 @@ func (ge *goEncoder) Encode(d *wsdl.Definitions) error {
 	if d == nil {
 		return nil
 	}
-
-	// default mechanism to set package name
-	if ge.packageName == nil {
-		ge.packageName = BindingPackageName(d.Binding)
-	}
-
 	var b bytes.Buffer
 	err := ge.encode(&b, d)
 	if err != nil {
@@ -189,7 +166,10 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	ge.cacheFuncs(d)
 	ge.cacheMessages(d)
 	ge.cacheSOAPOperations(d)
-
+	pkg := ge.formatPackageName(d.Binding.Name)
+	if pkg == "" {
+		pkg = "internal"
+	}
 	var b bytes.Buffer
 	var ff []func(io.Writer, *wsdl.Definitions) error
 	if len(ge.soapOps) > 0 {
@@ -212,8 +192,7 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 			return err
 		}
 	}
-
-	fmt.Fprintf(w, "package %s\n\nimport (\n", ge.packageName)
+	fmt.Fprintf(w, "package %s\n\nimport (\n", pkg)
 	for pkg := range ge.needsStdPkg {
 		fmt.Fprintf(w, "%q\n", pkg)
 	}
@@ -230,6 +209,10 @@ func (ge *goEncoder) encode(w io.Writer, d *wsdl.Definitions) error {
 	}
 	_, err = io.Copy(w, &b)
 	return err
+}
+
+func (ge *goEncoder) formatPackageName(pkg string) string {
+	return strings.Replace(strings.ToLower(pkg), ".", "", -1)
 }
 
 func (ge *goEncoder) importParts(d *wsdl.Definitions) error {
@@ -458,8 +441,11 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 			continue
 		}
 		in, out := code(inParams), code(outParams)
-		name := strings.Title(op.Name)
+		name := cleanString(strings.Title(op.Name))
 		in[0] = renameParam(in[0], "α")
+		for index, item := range in {
+			in[index] = cleanString(item)
+		}
 		out[0] = renameParam(out[0], "β")
 		var doc bytes.Buffer
 		ge.writeComments(&doc, name, op.Doc)
@@ -471,7 +457,7 @@ func (ge *goEncoder) writeInterfaceFuncs(w io.Writer, d *wsdl.Definitions) error
 		}
 		i++
 	}
-	n := d.PortType.Name
+	n := cleanString(d.PortType.Name)
 	return interfaceTypeT.Execute(w, &struct {
 		Name  string
 		Impl  string // private type that implements the interface
@@ -571,7 +557,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 }
 `))
 
-var soapActionFuncT = template.Must(template.New("soapActionFunc").Parse(
+var soap12FuncT = template.Must(template.New("soapFunc12").Parse(
 	`func (p *{{.PortType}}) {{.Name}}({{.Input}}) ({{.Output}}) {
 	γ := struct {
 		XMLName xml.Name ` + "`xml:\"Envelope\"`" + `
@@ -579,7 +565,7 @@ var soapActionFuncT = template.Must(template.New("soapActionFunc").Parse(
 			M {{.OutputType}} ` + "`xml:\"{{.XMLOutputType}}\"`" + `
 		}
 	}{}
-	if err = p.cli.{{.RoundTripType}}("{{.Action}}", α, &γ); err != nil {
+	if err = p.cli.RoundTripSoap12("{{.Action}}", α, &γ); err != nil {
 		return {{.RetDef}}, err
 	}
 	return {{if .RetPtr}}&{{end}}γ.Body.M, nil
@@ -597,23 +583,21 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	ge.needsStdPkg["encoding/xml"] = true
 	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
 	in[0] = renameParam(in[0], "α")
+	for index, item := range in {
+		in[index] = cleanString(item)
+	}
+
 	out[0] = renameParam(out[0], "β")
 	typ := strings.SplitN(out[0], " ", 2)
 	if strings.HasPrefix(ret[0], "&") {
 		ret[0] = "nil"
 	}
-	soapFunctionName := "RoundTripSoap12"
-	soapAction := ""
+	soap12Action := ""
 	if bindingOp, exists := ge.soapOps[op.Name]; exists {
-		soapAction = bindingOp.Operation.Action
-		if soapAction == "" {
-			soapFunctionName = "RoundTripWithAction"
-			soapAction = bindingOp.Operation11.Action
-		}
+		soap12Action = bindingOp.Operation.SoapAction
 	}
-	if soapAction != "" {
-		soapActionFuncT.Execute(w, &struct {
-			RoundTripType string
+	if soap12Action != "" {
+		soap12FuncT.Execute(w, &struct {
 			Action        string
 			PortType      string
 			Name          string
@@ -624,8 +608,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			RetPtr        bool
 			RetDef        string
 		}{
-			soapFunctionName,
-			soapAction,
+			soap12Action,
 			strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
 			strings.Title(op.Name),
 			strings.Join(in, ","),
@@ -1036,32 +1019,11 @@ func (ge *goEncoder) genGoXMLTypeFunction(w io.Writer, ct *wsdl.ComplexType) {
 	}
 
 	ext := ct.ComplexContent.Extension
-	if ext.Base != "" && !ct.Abstract {
+	if ext.Base != "" {
 		ge.writeComments(w, "SetXMLType", "")
-		fmt.Fprintf(w, "func (t *%s) SetXMLType() {\n", strings.Title(ct.Name))
-		fmt.Fprintf(w, "if t.OverrideTypeAttrXSI != nil {\n")
-		fmt.Fprintf(w, "    t.TypeAttrXSI = *t.OverrideTypeAttrXSI\n")
-		fmt.Fprintf(w, "} else {\n")
-		fmt.Fprintf(w, "    t.TypeAttrXSI = \"objtype:%s\"\n", ct.Name)
-		fmt.Fprintf(w, "}\n")
-		fmt.Fprintf(w, "if t.OverrideTypeNamespace != nil {\n")
-		fmt.Fprintf(w, "    t.TypeNamespace = *t.OverrideTypeNamespace\n")
-		fmt.Fprintf(w, "} else {\n")
-		fmt.Fprintf(w, "    t.TypeNamespace = \"%s\"\n", ct.TargetNamespace)
-		fmt.Fprintf(w, "}\n}\n\n")
-	}
-}
-
-// helper function to print out the XMLName
-func (ge *goEncoder) genXMLName(w io.Writer, targetNamespace string, name string) {
-	if elName, ok := ge.needsTag[name]; ok {
-		if ge.localNamespace == "" {
-			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
-				targetNamespace, elName)
-		} else {
-			fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s:%s\" json:\"-\" yaml:\"-\"`\n",
-				ge.localNamespace, elName)
-		}
+		fmt.Fprintf(w, "func (t *%s) SetXMLType() {\n", ct.Name)
+		fmt.Fprintf(w, "t.TypeAttrXSI = \"objtype:%s\"\n", ct.Name)
+		fmt.Fprintf(w, "t.TypeNamespace = \"%s\"\n}\n\n", ct.TargetNamespace)
 	}
 }
 
@@ -1078,7 +1040,8 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	} else if len(ct.Sequence.ComplexTypes) == 0 && len(ct.Sequence.Elements) == 0 {
 		c++
 	}
-	name := strings.Title(ct.Name)
+	titleName := strings.Title(ct.Name)
+	name := cleanString(titleName)
 	ge.writeComments(w, name, ct.Doc)
 	if ct.Abstract {
 		fmt.Fprintf(w, "type %s interface{}\n\n", name)
@@ -1089,21 +1052,19 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		return nil
 	}
 	if c > 2 {
-		fmt.Fprintf(w, "type %s struct {\n", name)
-		ge.genXMLName(w, d.TargetNamespace, name)
-		fmt.Fprintf(w, "}\n\n")
+		fmt.Fprintf(w, "type %s struct {}\n\n", name)
 		return nil
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
-	ge.genXMLName(w, d.TargetNamespace, name)
+	if elName, ok := ge.needsTag[titleName]; ok {
+		fmt.Fprintf(w, "XMLName xml.Name `xml:\"%s %s\" json:\"-\" yaml:\"-\"`\n",
+			d.TargetNamespace, elName)
+	}
 	err := ge.genStructFields(w, d, ct)
 
 	if ct.ComplexContent != nil && ct.ComplexContent.Extension != nil {
 		fmt.Fprint(w, "TypeAttrXSI   string `xml:\"xsi:type,attr,omitempty\"`\n")
 		fmt.Fprint(w, "TypeNamespace string `xml:\"xmlns:objtype,attr,omitempty\"`\n")
-		fmt.Fprint(w, "\n")
-		fmt.Fprint(w, "OverrideTypeAttrXSI   *string `xml:\"-\"`\n")
-		fmt.Fprint(w, "OverrideTypeNamespace *string `xml:\"-\"`\n")
 	}
 	if err != nil {
 		return err
@@ -1207,7 +1168,8 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 		et = "string"
 	}
 	tag := el.Name
-	fmt.Fprintf(w, "%s ", strings.Title(el.Name))
+	cleanedName := cleanString(strings.Title(el.Name))
+	fmt.Fprintf(w, "%s ", cleanedName)
 	if el.Max != "" && el.Max != "1" {
 		fmt.Fprintf(w, "[]")
 		if slicetype != "" {
@@ -1223,8 +1185,15 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 			typ = "*" + typ
 		}
 	}
+	typ = cleanString(typ)
 	fmt.Fprintf(w, "%s `xml:\"%s\" json:\"%s\" yaml:\"%s\"`\n",
 		typ, tag, tag, tag)
+}
+
+// remove invalid characters from struct name ea) ' ', '-'
+func cleanString(input string) string {
+	output := strings.Replace(input, "-", "", -1)
+	return strings.Replace(output, " ", "", -1)
 }
 
 func (ge *goEncoder) genAttributeField(w io.Writer, attr *wsdl.Attribute) {
@@ -1233,11 +1202,14 @@ func (ge *goEncoder) genAttributeField(w io.Writer, attr *wsdl.Attribute) {
 	}
 
 	tag := fmt.Sprintf("%s,attr", attr.Name)
-	fmt.Fprintf(w, "%s ", strings.Title(attr.Name))
+	cleanedAttrName := cleanString(strings.Title(attr.Name))
+	fmt.Fprintf(w, "%s ", cleanedAttrName)
 	typ := ge.wsdl2goType(attr.Type)
 	if attr.Nillable || attr.Min == 0 {
 		tag += ",omitempty"
 	}
+	typ = cleanString(typ)
+
 	fmt.Fprintf(w, "%s `xml:\"%s\" json:\"%s\" yaml:\"%s\"`\n",
 		typ, tag, tag, tag)
 }
@@ -1267,9 +1239,4 @@ func (ge *goEncoder) writeComments(w io.Writer, typeName, comment string) {
 		fmt.Fprintf(w, "%s\n", line)
 	}
 	return
-}
-
-// SetLocalNamespace allows overridding of namespace in XMLName
-func (ge *goEncoder) SetLocalNamespace(s string) {
-	ge.localNamespace = s
 }
