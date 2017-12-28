@@ -54,13 +54,13 @@ func main() {
 
 	cli := httpClient(opts.Insecure)
 
-	err := decode(w, opts, cli)
+	err := codegen(w, opts, cli)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func decode(w io.Writer, opts options, cli *http.Client) error {
+func codegen(w io.Writer, opts options, cli *http.Client) error {
 	var err error
 	var f io.ReadCloser
 	if opts.Src == "" || opts.Src == "-" {
