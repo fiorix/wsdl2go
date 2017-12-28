@@ -2,6 +2,7 @@ package wsdlgo
 
 import (
 	"testing"
+
 	"github.com/fiorix/wsdl2go/wsdl"
 )
 
