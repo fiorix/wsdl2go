@@ -305,9 +305,17 @@ func (ge *goEncoder) importSchema(d *wsdl.Definitions) error {
 			return err
 		}
 		ge.unionSchemasData(d, schema)
-		for _, i := range schema.Imports {
+		for _, item := range schema.Imports {
 			schema = &wsdl.Schema{}
-			err := ge.importRemote(i.Location, schema)
+			err := ge.importRemote(item.Location, schema)
+			if err != nil {
+				return err
+			}
+			ge.unionSchemasData(d, schema)
+		}
+		for _, item := range schema.Includes {
+			schema = &wsdl.Schema{}
+			err := ge.importRemote(item.Location, schema)
 			if err != nil {
 				return err
 			}
@@ -414,7 +422,11 @@ func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
 func (ge *goEncoder) cacheElements(ct []*wsdl.Element) {
 	for _, el := range ct {
 		if el.Name == "" || el.Type == "" {
-			continue
+			if el.Ref == "" {
+				continue
+			}
+			el.Name = ge.trimns(el.Ref)
+			el.Type = el.Name
 		}
 		name := ge.trimns(el.Name)
 		if _, exists := ge.elements[name]; exists {
@@ -612,7 +624,7 @@ var soapFuncT = template.Must(template.New("soapFunc").Parse(
 	if err := p.cli.RoundTripWithAction("{{.Name}}", α, &γ); err != nil {
 		return {{.RetDef}}
 	}
-	return {{range $index, $element := .OpOutputNames}}{{index $.OpOutputPrefixes $index}}γ.{{if $.RPCStyle}}M.{{end}}{{$element}}{{if not $index}}, {{end}}{{end}}nil
+	return {{range $index, $element := .OpOutputNames}}{{index $.OpOutputPrefixes $index}}γ.{{if $.RPCStyle}}M.{{end}}{{$element}}, {{end}}nil
 }
 `))
 
@@ -637,7 +649,7 @@ var soapActionFuncT = template.Must(template.New("soapActionFunc").Parse(
 	if err := p.cli.{{.RoundTripType}}("{{.Action}}", α, &γ); err != nil {
 		return {{.RetDef}}
 	}
-	return {{range $index, $element := .OpOutputNames}}{{index $.OpOutputPrefixes $index}}γ.{{if $.RPCStyle}}M.{{end}}{{$element}}{{if not $index}}, {{end}}{{end}}nil
+	return {{range $index, $element := .OpOutputNames}}{{index $.OpOutputPrefixes $index}}γ.{{if $.RPCStyle}}M.{{end}}{{$element}}, {{end}}nil
 }
 `))
 
@@ -996,7 +1008,7 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return "bool"
 	case "hexbinary", "base64binary":
 		return "[]byte"
-	case "string", "anyuri", "token", "qname":
+	case "string", "anyuri", "token", "nmtoken", "qname", "language", "id":
 		return "string"
 	case "date":
 		ge.needsDateType = true
@@ -1286,8 +1298,10 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		return nil
 	}
 	if ct.Sequence != nil && ct.Sequence.Any != nil {
-		fmt.Fprintf(w, "type %s []interface{}\n\n", name)
-		return nil
+		if len(ct.Sequence.Elements) == 0 {
+			fmt.Fprintf(w, "type %s []interface{}\n\n", name)
+			return nil
+		}
 	}
 	if c > 2 {
 		fmt.Fprintf(w, "type %s struct {\n", name)
@@ -1476,6 +1490,9 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 }
 
 func (ge *goEncoder) genAttributeField(w io.Writer, attr *wsdl.Attribute) {
+	if attr.Name == "" && attr.Ref != "" {
+		attr.Name = ge.trimns(attr.Ref)
+	}
 	if attr.Type == "" {
 		attr.Type = "string"
 	}

@@ -61,6 +61,7 @@ type Schema struct {
 	TargetNamespace string            `xml:"targetNamespace,attr"`
 	Namespaces      map[string]string `xml:"-"`
 	Imports         []*ImportSchema   `xml:"import"`
+	Includes        []*IncludeSchema  `xml:"include"`
 	SimpleTypes     []*SimpleType     `xml:"simpleType"`
 	ComplexTypes    []*ComplexType    `xml:"complexType"`
 	Elements        []*Element        `xml:"element"`
@@ -191,6 +192,13 @@ type Import struct {
 // ImportSchema points to another WSDL to be imported at schema level.
 type ImportSchema struct {
 	XMLName   xml.Name `xml:"import"`
+	Namespace string   `xml:"namespace,attr"`
+	Location  string   `xml:"schemaLocation,attr"`
+}
+
+// IncludeSchema points to another WSDL to be imported at schema level.
+type IncludeSchema struct {
+	XMLName   xml.Name `xml:"include"`
 	Namespace string   `xml:"namespace,attr"`
 	Location  string   `xml:"schemaLocation,attr"`
 }
