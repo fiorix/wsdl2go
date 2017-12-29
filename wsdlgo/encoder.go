@@ -1240,10 +1240,10 @@ func (ge *goEncoder) genXMLName(w io.Writer, targetNamespace string, name string
 	}
 }
 
-var validGoSymbol = regexp.MustCompile(`[0-9_]*[^0-9a-zA-Z_]+`)
+var invalidGoSymbol = regexp.MustCompile(`[0-9_]*[^0-9a-zA-Z_]+`)
 
 func goSymbol(s string) string {
-	v := validGoSymbol.ReplaceAllString(trimns(s), " ")
+	v := invalidGoSymbol.ReplaceAllString(trimns(s), " ")
 	var name string
 	for _, part := range strings.Split(v, " ") {
 		name += strings.Title(part)
