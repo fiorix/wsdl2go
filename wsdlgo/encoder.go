@@ -691,8 +691,11 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		operationOutputPrefixes[index] = ""
 		retDefaults[index] = "nil"
 
+		// If the output is >not< a pointer, we need to return the value of the response
 		if !strings.HasPrefix(name.dataType, "*") {
 			operationOutputPrefixes[index] = "*"
+
+			// Also - only resolve the default for non-pointer returns (otherwise nil suffices)
 			retDefaults[index] = ge.wsdl2goDefault(name.dataType)
 		}
 	}
@@ -1037,7 +1040,7 @@ func (ge *goEncoder) wsdl2goDefault(t string) string {
 		return "0"
 	case "string":
 		return `""`
-	case "[]byte":
+	case "[]byte", "interface{}":
 		return "nil"
 	default:
 		return "&" + v + "{}"
