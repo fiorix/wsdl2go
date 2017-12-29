@@ -23,8 +23,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fiorix/wsdl2go/wsdl"
 	"regexp"
+
+	"github.com/fiorix/wsdl2go/wsdl"
 )
 
 // An Encoder generates Go code from WSDL definitions.
