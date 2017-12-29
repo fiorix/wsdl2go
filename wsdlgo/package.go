@@ -1,8 +1,9 @@
 package wsdlgo
 
 import (
-	"github.com/fiorix/wsdl2go/wsdl"
 	"strings"
+
+	"github.com/fiorix/wsdl2go/wsdl"
 )
 
 const (
