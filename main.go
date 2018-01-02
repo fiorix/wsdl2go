@@ -23,6 +23,7 @@ type options struct {
 	Namespace string
 	Insecure  bool
 	Version   bool
+	NeedsTag  bool
 }
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 	flag.StringVar(&opts.Package, "p", opts.Package, "package name")
 	flag.BoolVar(&opts.Insecure, "yolo", opts.Insecure, "accept invalid https certificates")
 	flag.BoolVar(&opts.Version, "version", opts.Version, "show version and exit")
+	flag.BoolVar(&opts.NeedsTag, "tag", opts.NeedsTag, "generate XMLName and tag")
 	flag.Parse()
 	if opts.Version {
 		fmt.Printf("wsdl2go %s\n", version)
@@ -82,6 +84,7 @@ func codegen(w io.Writer, opts options, cli *http.Client) error {
 	if opts.Namespace != "" {
 		enc.SetLocalNamespace(opts.Namespace)
 	}
+	enc.SetNeedsTag(opts.NeedsTag)
 
 	return enc.Encode(d)
 }

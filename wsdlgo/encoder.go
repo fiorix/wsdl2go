@@ -43,6 +43,9 @@ type Encoder interface {
 	// SetLocalNamespace allows overriding of the Namespace in XMLName instead
 	// of the one specified in wsdl
 	SetLocalNamespace(namespace string)
+
+	// SetNeedsTag allows XMLName tag to be generated.
+	SetNeedsTag(b bool)
 }
 
 type goEncoder struct {
@@ -85,6 +88,9 @@ type goEncoder struct {
 
 	// localNamespace allows overriding of namespace in XMLName
 	localNamespace string
+
+	// generates XMLName
+	generateXMLName bool
 }
 
 // NewEncoder creates and initializes an Encoder that generates code to w.
@@ -111,6 +117,10 @@ func (ge *goEncoder) SetPackageName(name fmt.Stringer) {
 
 func (ge *goEncoder) SetClient(c *http.Client) {
 	ge.http = c
+}
+
+func (ge *goEncoder) SetNeedsTag(b bool) {
+	ge.generateXMLName = b
 }
 
 func gofmtPath() (string, error) {
@@ -811,8 +821,7 @@ func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]*parameter, error) {
 		return nil, fmt.Errorf("operation %q wants input message %q but it's not defined", op.Name, im)
 	}
 
-	// TODO: I had to disable this for my use case - do other use cases still work with false?
-	return ge.genParams(req, false), nil
+	return ge.genParams(req), nil
 }
 
 // returns list of function output parameters plus error.
@@ -827,7 +836,7 @@ func (ge *goEncoder) outputParams(op *wsdl.Operation) ([]*parameter, error) {
 	if !ok {
 		return nil, fmt.Errorf("operation %q wants output message %q but it's not defined", op.Name, om)
 	}
-	return append(ge.genParams(resp, false), out[0]), nil
+	return append(ge.genParams(resp), out[0]), nil
 }
 
 var isGoKeyword = map[string]bool{
@@ -890,7 +899,7 @@ func maskKeywordUsage(code string) string {
 	return returnVal
 }
 
-func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
+func (ge *goEncoder) genParams(m *wsdl.Message) []*parameter {
 	params := make([]*parameter, len(m.Parts))
 	for i, param := range m.Parts {
 		var t, token, elName string
@@ -909,7 +918,7 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 			token = trimns(param.Element)
 		}
 		params[i] = &parameter{code: param.Name, dataType: t, xmlToken: token}
-		if needsTag {
+		if ge.generateXMLName {
 			ge.needsStdPkg["encoding/xml"] = true
 			ge.needsTag[strings.TrimPrefix(t, "*")] = elName
 		}
