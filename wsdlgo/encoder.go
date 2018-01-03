@@ -682,20 +682,17 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	}
 	retDefaults[len(retDefaults)-1] = "err"
 
-	// Check if we need to outline the op and prefix with a namespace
-	namespacedOpName := "-"
-	opResponseName := "-"
-	if rpcStyle {
-		// Check if we need to prefix the op with a namespace
-		namespacedOpName = op.Name
-		nsSplit := strings.Split(ge.funcs[op.Name].Input.Message, ":")
-		if len(nsSplit) > 1 {
-			namespacedOpName = nsSplit[0] + ":" + namespacedOpName
-		}
-
-		// The response name is always the operation name + "Response" according to specification
-		opResponseName = fmt.Sprintf("%sResponse", op.Name)
+	// Check if we need to prefix the op with a namespace
+	namespacedOpName := op.Name
+	nsSplit := strings.Split(ge.funcs[op.Name].Input.Message, ":")
+	if len(nsSplit) > 1 {
+		namespacedOpName = nsSplit[0] + ":" + namespacedOpName
 	}
+
+	// The response name is always the operation name + "Response" according to specification.
+	// Note, we also omit the namespace, since this does currently not work reliable with golang
+	// (See: https://github.com/golang/go/issues/14407)
+	opResponseName := op.Name + "Response"
 
 	// No-input operations can be inlined into an anonymous struct on rpc, and omitted otherwise
 	operationInputDataType := ""

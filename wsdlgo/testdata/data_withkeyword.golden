@@ -116,7 +116,7 @@ type dataEndpointPortType struct {
 // GetData was auto-generated from WSDL.
 func (p *dataEndpointPortType) GetData(_return *GetData) (*GetDataResp, error) {
 	α := struct {
-		OperationGetDataReq `xml:"-"`
+		OperationGetDataReq `xml:"ns:getData"`
 	}{
 		OperationGetDataReq{
 			_return,
@@ -124,7 +124,7 @@ func (p *dataEndpointPortType) GetData(_return *GetData) (*GetDataResp, error) {
 	}
 
 	γ := struct {
-		OperationGetDataResp `xml:"-"`
+		OperationGetDataResp `xml:"getDataResponse"`
 	}{}
 	if err := p.cli.RoundTripWithAction("GetData", α, &γ); err != nil {
 		return nil, err

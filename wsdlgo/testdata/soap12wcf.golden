@@ -39,7 +39,7 @@ type test struct {
 // HelloWorld was auto-generated from WSDL.
 func (p *test) HelloWorld(parameters string) (string, error) {
 	α := struct {
-		OperationHelloWorldMessageIn `xml:"-"`
+		OperationHelloWorldMessageIn `xml:"tns:HelloWorld"`
 	}{
 		OperationHelloWorldMessageIn{
 			&parameters,
@@ -47,7 +47,7 @@ func (p *test) HelloWorld(parameters string) (string, error) {
 	}
 
 	γ := struct {
-		OperationHelloWorldMessageOut `xml:"-"`
+		OperationHelloWorldMessageOut `xml:"HelloWorldResponse"`
 	}{}
 	if err := p.cli.RoundTripSoap12("http://example.com/Test/HelloWorldRequest", α, &γ); err != nil {
 		return "", err
