@@ -97,7 +97,7 @@ type stockQuotePortType struct {
 // DestroySession was auto-generated from WSDL.
 func (p *stockQuotePortType) DestroySession(body *DestroySessionRequest) (*DestroySessionResponse, error) {
 	α := struct {
-		OperationDestroySessionInput `xml:"-"`
+		OperationDestroySessionInput `xml:"tns:DestroySession"`
 	}{
 		OperationDestroySessionInput{
 			body,
@@ -105,7 +105,7 @@ func (p *stockQuotePortType) DestroySession(body *DestroySessionRequest) (*Destr
 	}
 
 	γ := struct {
-		OperationDestroySessionOutput `xml:"-"`
+		OperationDestroySessionOutput `xml:"DestroySessionResponse"`
 	}{}
 	if err := p.cli.RoundTripWithAction("http://example.com/DestroySession", α, &γ); err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (p *stockQuotePortType) DestroySession(body *DestroySessionRequest) (*Destr
 // GetLastTradePrice was auto-generated from WSDL.
 func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error) {
 	α := struct {
-		OperationGetLastTradePriceInput `xml:"-"`
+		OperationGetLastTradePriceInput `xml:"tns:GetLastTradePrice"`
 	}{
 		OperationGetLastTradePriceInput{
 			body,
@@ -124,7 +124,7 @@ func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradeP
 	}
 
 	γ := struct {
-		OperationGetLastTradePriceOutput `xml:"-"`
+		OperationGetLastTradePriceOutput `xml:"GetLastTradePriceResponse"`
 	}{}
 	if err := p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradeP
 // GetSession was auto-generated from WSDL.
 func (p *stockQuotePortType) GetSession(body *GetSessionRequest) (*GetSessionResponse, error) {
 	α := struct {
-		OperationGetSessionInput `xml:"-"`
+		OperationGetSessionInput `xml:"tns:GetSession"`
 	}{
 		OperationGetSessionInput{
 			body,
@@ -143,7 +143,7 @@ func (p *stockQuotePortType) GetSession(body *GetSessionRequest) (*GetSessionRes
 	}
 
 	γ := struct {
-		OperationGetSessionOutput `xml:"-"`
+		OperationGetSessionOutput `xml:"GetSessionResponse"`
 	}{}
 	if err := p.cli.RoundTripWithAction("http://example.com/GetSession", α, &γ); err != nil {
 		return nil, err
