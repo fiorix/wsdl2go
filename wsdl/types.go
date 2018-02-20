@@ -125,6 +125,7 @@ type ComplexType struct {
 	AllElements     []*Element      `xml:"all>element"`
 	ComplexContent  *ComplexContent `xml:"complexContent"`
 	Sequence        *Sequence       `xml:"sequence"`
+	Choice          *Choice         `xml:"choice"`
 	Attributes      []*Attribute    `xml:"attribute"`
 	TargetNamespace string
 }
@@ -141,12 +142,22 @@ type Extension struct {
 	XMLName    xml.Name     `xml:"extension"`
 	Base       string       `xml:"base,attr"`
 	Sequence   *Sequence    `xml:"sequence"`
+	Choice     *Choice      `xml:"choice"`
 	Attributes []*Attribute `xml:"attribute"`
 }
 
 // Sequence describes a list of elements (parameters) of a type.
 type Sequence struct {
 	XMLName      xml.Name       `xml:"sequence"`
+	ComplexTypes []*ComplexType `xml:"complexType"`
+	Elements     []*Element     `xml:"element"`
+	Any          []*AnyElement  `xml:"any"`
+	Choices      []*Choice      `xml:"choice"`
+}
+
+// Choice describes a list of elements (parameters) of a type.
+type Choice struct {
+	XMLName      xml.Name       `xml:"choice"`
 	ComplexTypes []*ComplexType `xml:"complexType"`
 	Elements     []*Element     `xml:"element"`
 	Any          []*AnyElement  `xml:"any"`
