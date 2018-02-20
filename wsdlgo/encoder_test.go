@@ -54,6 +54,7 @@ var EncoderCases = []struct {
 	{F: "data_withkeyword.wsdl", G: "data_withkeyword.golden", E: nil},
 	{F: "localimport.wsdl", G: "localimport.golden", E: nil},
 	{F: "localimport-url.wsdl", G: "localimport.golden", E: nil},
+	{F: "localimport_choice.wsdl", G: "localimport_choice.golden", E: nil},
 }
 
 func NewTestServer(t *testing.T) *httptest.Server {

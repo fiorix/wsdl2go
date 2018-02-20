@@ -1,0 +1,67 @@
+package stockquotesoapbinding
+
+import (
+	"github.com/fiorix/wsdl2go/soap"
+)
+
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://example.com/stockquote.wsdl"
+
+// NewStockQuotePortType creates an initializes a StockQuotePortType.
+func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
+	return &stockQuotePortType{cli}
+}
+
+// StockQuotePortType was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type StockQuotePortType interface {
+	// GetLastTradePrice was auto-generated from WSDL.
+	GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error)
+}
+
+// TradePrice was auto-generated from WSDL.
+type TradePrice struct {
+	Price         *float64 `xml:"price,omitempty" json:"price,omitempty" yaml:"price,omitempty"`
+	Discountprice *float64 `xml:"discountprice,omitempty" json:"discountprice,omitempty" yaml:"discountprice,omitempty"`
+}
+
+// TradePriceRequest was auto-generated from WSDL.
+type TradePriceRequest struct {
+	TickerSymbol *string `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
+}
+
+// Operation wrapper for GetLastTradePrice.
+// OperationGetLastTradePriceInput was auto-generated from WSDL.
+type OperationGetLastTradePriceInput struct {
+	Body *TradePriceRequest `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+}
+
+// Operation wrapper for GetLastTradePrice.
+// OperationGetLastTradePriceOutput was auto-generated from WSDL.
+type OperationGetLastTradePriceOutput struct {
+	Body *TradePrice `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+}
+
+// stockQuotePortType implements the StockQuotePortType interface.
+type stockQuotePortType struct {
+	cli *soap.Client
+}
+
+// GetLastTradePrice was auto-generated from WSDL.
+func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error) {
+	α := struct {
+		OperationGetLastTradePriceInput `xml:"tns:GetLastTradePrice"`
+	}{
+		OperationGetLastTradePriceInput{
+			body,
+		},
+	}
+
+	γ := struct {
+		OperationGetLastTradePriceOutput `xml:"GetLastTradePriceResponse"`
+	}{}
+	if err := p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
+		return nil, err
+	}
+	return γ.Body, nil
+}

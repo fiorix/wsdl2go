@@ -368,6 +368,15 @@ func (ge *goEncoder) cacheTypes(d *wsdl.Definitions) {
 	}
 }
 
+func (ge *goEncoder) cacheChoiceTypeElements(choice *wsdl.Choice) {
+	if choice != nil {
+		for _, cct := range choice.ComplexTypes {
+			ge.cacheComplexTypeElements(cct)
+		}
+		ge.cacheElements(choice.Elements)
+	}
+}
+
 func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
 	if ct.AllElements != nil {
 		ge.cacheElements(ct.AllElements)
@@ -375,6 +384,10 @@ func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
 	if ct.Sequence != nil {
 		ge.cacheElements(ct.Sequence.Elements)
 	}
+	if ct.Choice != nil {
+		ge.cacheElements(ct.Choice.Elements)
+	}
+
 	cc := ct.ComplexContent
 	if cc != nil {
 		cce := cc.Extension
@@ -384,6 +397,14 @@ func (ge *goEncoder) cacheComplexTypeElements(ct *wsdl.ComplexType) {
 				ge.cacheComplexTypeElements(cct)
 			}
 			ge.cacheElements(seq.Elements)
+
+			//Add in Choice elements
+			for _, choice := range seq.Choices {
+				ge.cacheChoiceTypeElements(choice)
+			}
+		}
+		if cce != nil && cce.Choice != nil {
+			ge.cacheChoiceTypeElements(cce.Choice)
 		}
 	}
 }
@@ -407,6 +428,9 @@ func (ge *goEncoder) cacheElements(ct []*wsdl.Element) {
 			ge.cacheElements(ct.AllElements)
 			if ct.Sequence != nil {
 				ge.cacheElements(ct.Sequence.Elements)
+			}
+			if ct.Choice != nil {
+				ge.cacheElements(ct.Choice.Elements)
 			}
 		}
 	}
@@ -1264,19 +1288,23 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	if ct.ComplexContent == nil || ct.ComplexContent.Extension == nil {
 		c++
 	}
-	if ct.Sequence == nil {
+	if ct.Sequence == nil && ct.Choice == nil {
 		c++
-	} else if len(ct.Sequence.ComplexTypes) == 0 && len(ct.Sequence.Elements) == 0 {
+	} else if ct.Sequence != nil &&
+		(len(ct.Sequence.ComplexTypes) == 0 && len(ct.Sequence.Elements) == 0 && len(ct.Sequence.Choices) == 0) {
+		c++
+	} else if ct.Choice != nil && (len(ct.Choice.ComplexTypes) == 0 && len(ct.Choice.Elements) == 0) {
 		c++
 	}
+
 	name := goSymbol(ct.Name)
 	ge.writeComments(w, name, ct.Doc)
 	if ct.Abstract {
 		fmt.Fprintf(w, "type %s interface{}\n\n", name)
 		return nil
 	}
-	if ct.Sequence != nil && ct.Sequence.Any != nil {
-		if len(ct.Sequence.Elements) == 0 {
+	if (ct.Sequence != nil && ct.Sequence.Any != nil) || (ct.Choice != nil && ct.Choice.Any != nil) {
+		if len(ct.Sequence.Elements) == 0 || len(ct.Choice.Elements) == 0 {
 			fmt.Fprintf(w, "type %s []interface{}\n\n", name)
 			return nil
 		}
@@ -1379,18 +1407,35 @@ func (ge *goEncoder) genComplexContent(w io.Writer, d *wsdl.Definitions, ct *wsd
 		ge.genAttributeField(w, attr)
 	}
 
-	if ext.Sequence == nil {
-		return nil
-	}
-	seq := ext.Sequence
-	for _, v := range seq.ComplexTypes {
-		err := ge.genElements(w, v)
-		if err != nil {
-			return err
+	sequences := make([]*wsdl.Sequence, 0)
+	if ext.Sequence != nil {
+		sequences = append(sequences, ext.Sequence)
+		for _, choice := range ext.Sequence.Choices {
+			tmpSeq := &wsdl.Sequence{
+				ComplexTypes: choice.ComplexTypes,
+				Elements:     choice.Elements,
+				Any:          choice.Any}
+			sequences = append(sequences, tmpSeq)
 		}
 	}
-	for _, v := range ext.Sequence.Elements {
-		ge.genElementField(w, v)
+	if ext.Choice != nil {
+		tmpSeq := &wsdl.Sequence{
+			ComplexTypes: ext.Choice.ComplexTypes,
+			Elements:     ext.Choice.Elements,
+			Any:          ext.Choice.Any}
+		sequences = append(sequences, tmpSeq)
+	}
+	for _, seq := range sequences {
+		for _, v := range seq.ComplexTypes {
+			err := ge.genElements(w, v)
+			if err != nil {
+				return err
+			}
+		}
+		for _, v := range seq.Elements {
+			ge.genElementField(w, v)
+		}
+
 	}
 	return nil
 }
@@ -1401,6 +1446,16 @@ func (ge *goEncoder) genElements(w io.Writer, ct *wsdl.ComplexType) error {
 	}
 	if ct.Sequence != nil {
 		for _, el := range ct.Sequence.Elements {
+			ge.genElementField(w, el)
+		}
+		for _, choice := range ct.Sequence.Choices {
+			for _, el := range choice.Elements {
+				ge.genElementField(w, el)
+			}
+		}
+	}
+	if ct.Choice != nil {
+		for _, el := range ct.Choice.Elements {
 			ge.genElementField(w, el)
 		}
 	}
@@ -1422,10 +1477,16 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 	var slicetype string
 	if el.Type == "" && el.ComplexType != nil {
 		seq := el.ComplexType.Sequence
+		if seq == nil {
+			seq = &wsdl.Sequence{
+				ComplexTypes: el.ComplexType.Choice.ComplexTypes,
+				Elements:     el.ComplexType.Choice.Elements,
+				Any:          el.ComplexType.Choice.Any}
+		}
 		if seq != nil {
 			if len(seq.Elements) == 1 {
 				n := el.Name
-				seqel := el.ComplexType.Sequence.Elements[0]
+				seqel := seq.Elements[0]
 				el = new(wsdl.Element)
 				*el = *seqel
 				slicetype = seqel.Name
