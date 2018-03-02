@@ -42,15 +42,16 @@ type AuthHeader struct {
 
 // Client is a SOAP client.
 type Client struct {
-	URL                    string              // URL of the server
-	Namespace              string              // SOAP Namespace
-	ThisNamespace          string              // SOAP This-Namespace (tns)
-	ExcludeActionNamespace bool                // Include Namespace to SOAP Action header
-	Envelope               string              // Optional SOAP Envelope
-	Header                 Header              // Optional SOAP Header
-	ContentType            string              // Optional Content-Type (default text/xml)
-	Config                 *http.Client        // Optional HTTP client
-	Pre                    func(*http.Request) // Optional hook to modify outbound requests
+	URL                    string               // URL of the server
+	Namespace              string               // SOAP Namespace
+	ThisNamespace          string               // SOAP This-Namespace (tns)
+	ExcludeActionNamespace bool                 // Include Namespace to SOAP Action header
+	Envelope               string               // Optional SOAP Envelope
+	Header                 Header               // Optional SOAP Header
+	ContentType            string               // Optional Content-Type (default text/xml)
+	Config                 *http.Client         // Optional HTTP client
+	Pre                    func(*http.Request)  // Optional hook to modify outbound requests
+	Post                   func(*http.Response) // Optional hook to snoop inbound responses
 }
 
 // XMLTyper is an abstract interface for types that can set an XML type.
@@ -131,6 +132,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		return err
 	}
 	defer resp.Body.Close()
+	if c.Post != nil {
+		c.Post(resp)
+	}
 	if resp.StatusCode != http.StatusOK {
 		// read only the first MiB of the body in error case
 		limReader := io.LimitReader(resp.Body, 1024*1024)
