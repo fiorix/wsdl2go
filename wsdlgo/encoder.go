@@ -1038,7 +1038,7 @@ func (ge *goEncoder) wsdl2goDefault(t string) string {
 		return `errors.New("not implemented")`
 	case "bool":
 		return "false"
-	case "int", "int64", "float64":
+	case "uint", "int", "int64", "float64":
 		return "0"
 	case "string":
 		return `""`
