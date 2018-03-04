@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!--
+This is Example 5. SOAP binding of request-response RPC operation over HTTP
+from the SOAP examples chapter. To focus solely on arrays, the date types have
+been removed.
+
+https://www.w3.org/TR/2001/NOTE-wsdl-20010315#_soap-e
+-->
+<definitions name="StockQuote"
+
+targetNamespace="http://example.com/stockquote.wsdl"
+          xmlns:tns="http://example.com/stockquote.wsdl"
+          xmlns:xsd="http://www.w3.org/2000/10/XMLSchema"
+          xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+          xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+          xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+          xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+    <types>
+       <xsd:schema xmlns="http://www.w3.org/2000/10/XMLSchema">
+           <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+           <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/" />
+
+           <xsd:complexType name="ArrayOfFloat">
+              <xsd:complexContent>
+                  <xsd:restriction base="soapenc:Array">
+                      <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="xsd:float[]"/>
+                  </xsd:restriction>
+              </xsd:complexContent>
+           </xsd:complexType>
+       </xsd:schema>
+    </types>
+
+    <message name="GetTradePricesInput">
+        <part name="tickerSymbol" element="xsd:string"/>
+    </message>
+
+    <message name="GetTradePricesOutput">
+        <part name="result" type="tns:ArrayOfFloat"/>
+    </message>
+
+    <portType name="StockQuotePortType">
+        <operation name="GetTradePrices">
+           <input message="tns:GetTradePricesInput"/>
+           <output message="tns:GetTradePricesOutput"/>
+        </operation>
+    </portType>
+
+    <binding name="StockQuoteSoapBinding" type="tns:StockQuotePortType">
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetTradePrices">
+           <soap:operation soapAction="http://example.com/GetTradePrices"/>
+           <input>
+               <soap:body use="encoded" namespace="http://example.com/stockquote"
+                          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           </input>
+           <output>
+               <soap:body use="encoded" namespace="http://example.com/stockquote"
+                          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+           </output>
+        </operation>
+    </binding>
+
+    <service name="StockQuoteService">
+        <documentation>My first service</documentation>
+        <port name="StockQuotePort" binding="tns:StockQuoteBinding">
+           <soap:address location="http://example.com/stockquote"/>
+        </port>
+    </service>
+</definitions>

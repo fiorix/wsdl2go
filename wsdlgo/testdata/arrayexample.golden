@@ -1,0 +1,61 @@
+package stockquotesoapbinding
+
+import (
+	"github.com/fiorix/wsdl2go/soap"
+)
+
+// Namespace was auto-generated from WSDL.
+var Namespace = "http://example.com/stockquote.wsdl"
+
+// NewStockQuotePortType creates an initializes a StockQuotePortType.
+func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
+	return &stockQuotePortType{cli}
+}
+
+// StockQuotePortType was auto-generated from WSDL
+// and defines interface for the remote service. Useful for testing.
+type StockQuotePortType interface {
+	// GetTradePrices was auto-generated from WSDL.
+	GetTradePrices(tickerSymbol string) (*ArrayOfFloat, error)
+}
+
+// ArrayOfFloat was auto-generated from WSDL.
+type ArrayOfFloat struct {
+	Items []*float `xml:"item,omitempty" json:"item,omitempty" yaml:"item,omitempty"`
+}
+
+// Operation wrapper for GetTradePrices.
+// OperationGetTradePricesInput was auto-generated from WSDL.
+type OperationGetTradePricesInput struct {
+	TickerSymbol *string `xml:"tickerSymbol,omitempty" json:"tickerSymbol,omitempty" yaml:"tickerSymbol,omitempty"`
+}
+
+// Operation wrapper for GetTradePrices.
+// OperationGetTradePricesOutput was auto-generated from WSDL.
+type OperationGetTradePricesOutput struct {
+	Result *ArrayOfFloat `xml:"result,omitempty" json:"result,omitempty" yaml:"result,omitempty"`
+}
+
+// stockQuotePortType implements the StockQuotePortType interface.
+type stockQuotePortType struct {
+	cli *soap.Client
+}
+
+// GetTradePrices was auto-generated from WSDL.
+func (p *stockQuotePortType) GetTradePrices(tickerSymbol string) (*ArrayOfFloat, error) {
+	α := struct {
+		M OperationGetTradePricesInput `xml:"tns:GetTradePrices"`
+	}{
+		OperationGetTradePricesInput{
+			&tickerSymbol,
+		},
+	}
+
+	γ := struct {
+		M OperationGetTradePricesOutput `xml:"GetTradePricesResponse"`
+	}{}
+	if err := p.cli.RoundTripWithAction("http://example.com/GetTradePrices", α, &γ); err != nil {
+		return nil, err
+	}
+	return γ.M.Result, nil
+}
