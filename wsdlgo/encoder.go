@@ -1309,6 +1309,16 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 			return nil
 		}
 	}
+	if ct.ComplexContent != nil {
+		restr := ct.ComplexContent.Restriction
+		if restr != nil && len(restr.Attributes) == 1 && restr.Attributes[0].ArrayType != "" {
+			fmt.Fprintf(w, "type %s struct {\n", name)
+			typ := strings.SplitN(trimns(restr.Attributes[0].ArrayType), "[", 2)[0]
+			fmt.Fprintf(w, "Items []*%s `xml:\"item,omitempty\" json:\"item,omitempty\" yaml:\"item,omitempty\"`\n", typ)
+			fmt.Fprintf(w, "}\n\n")
+			return nil
+		}
+	}
 	if c > 2 && len(ct.Attributes) == 0 {
 		fmt.Fprintf(w, "type %s struct {\n", name)
 		ge.genXMLName(w, d.TargetNamespace, name)

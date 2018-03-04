@@ -105,9 +105,10 @@ type Union struct {
 // Restriction describes the WSDL type of the simple type and
 // optionally its allowed values.
 type Restriction struct {
-	XMLName xml.Name `xml:"restriction"`
-	Base    string   `xml:"base,attr"`
-	Enum    []*Enum  `xml:"enumeration"`
+	XMLName    xml.Name     `xml:"restriction"`
+	Base       string       `xml:"base,attr"`
+	Enum       []*Enum      `xml:"enumeration"`
+	Attributes []*Attribute `xml:"attribute"`
 }
 
 // Enum describes one possible value for a Restriction.
@@ -133,8 +134,9 @@ type ComplexType struct {
 // ComplexContent describes complex content within a complex type. Usually
 // for extending the complex type with fields from the complex content.
 type ComplexContent struct {
-	XMLName   xml.Name   `xml:"complexContent"`
-	Extension *Extension `xml:"extension"`
+	XMLName     xml.Name     `xml:"complexContent"`
+	Extension   *Extension   `xml:"extension"`
+	Restriction *Restriction `xml:"restriction"`
 }
 
 // Extension describes a complex content extension.
@@ -165,13 +167,14 @@ type Choice struct {
 
 // Attribute describes an attribute of a given type.
 type Attribute struct {
-	XMLName  xml.Name `xml:"attribute"`
-	Name     string   `xml:"name,attr"`
-	Ref      string   `xml:"ref,attr"`
-	Type     string   `xml:"type,attr"`
-	Min      int      `xml:"minOccurs,attr"`
-	Max      string   `xml:"maxOccurs,attr"` // can be # or unbounded
-	Nillable bool     `xml:"nillable,attr"`
+	XMLName   xml.Name `xml:"attribute"`
+	Name      string   `xml:"name,attr"`
+	Ref       string   `xml:"ref,attr"`
+	Type      string   `xml:"type,attr"`
+	ArrayType string   `xml:"arrayType,attr"`
+	Min       int      `xml:"minOccurs,attr"`
+	Max       string   `xml:"maxOccurs,attr"` // can be # or unbounded
+	Nillable  bool     `xml:"nillable,attr"`
 }
 
 // Element describes an element of a given type.
