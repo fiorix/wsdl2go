@@ -44,6 +44,7 @@ type AuthHeader struct {
 type Client struct {
 	URL                    string               // URL of the server
 	Namespace              string               // SOAP Namespace
+	URNamespace            string               // Uniform Resource Namespace
 	ThisNamespace          string               // SOAP This-Namespace (tns)
 	ExcludeActionNamespace bool                 // Include Namespace to SOAP Action header
 	Envelope               string               // Optional SOAP Envelope
@@ -94,6 +95,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	setXMLType(reflect.ValueOf(in))
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
+		URNAttr: 	  c.URNamespace,
 		NSAttr:       c.Namespace,
 		TNSAttr:      c.ThisNamespace,
 		XSIAttr:      XSINamespace,
@@ -225,6 +227,7 @@ type Envelope struct {
 	EnvelopeAttr string   `xml:"xmlns:SOAP-ENV,attr"`
 	NSAttr       string   `xml:"xmlns:ns,attr"`
 	TNSAttr      string   `xml:"xmlns:tns,attr,omitempty"`
+	URNAttr      string   `xml:"xmlns:urn,attr,omitempty"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"SOAP-ENV:Header"`
 	Body         Message  `xml:"SOAP-ENV:Body"`
