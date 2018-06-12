@@ -43,6 +43,7 @@ type AuthHeader struct {
 // Client is a SOAP client.
 type Client struct {
 	URL                    string               // URL of the server
+	UserAgent              string               // User-Agent header will be added to each request
 	Namespace              string               // SOAP Namespace
 	URNamespace            string               // Uniform Resource Namespace
 	ThisNamespace          string               // SOAP This-Namespace (tns)
@@ -159,6 +160,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 // RoundTrip implements the RoundTripper interface.
 func (c *Client) RoundTrip(in, out Message) error {
 	headerFunc := func(r *http.Request) {
+		if c.UserAgent != "" {
+			r.Header.Add("User-Agent", c.UserAgent)
+		}
 		var actionName, soapAction string
 		if in != nil {
 			soapAction = reflect.TypeOf(in).Elem().Name()
@@ -184,6 +188,9 @@ func (c *Client) RoundTrip(in, out Message) error {
 // that need to set the SOAPAction header.
 func (c *Client) RoundTripWithAction(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
+		if c.UserAgent != "" {
+			r.Header.Add("User-Agent", c.UserAgent)
+		}
 		var actionName string
 		ct := c.ContentType
 		if ct == "" {
