@@ -1303,8 +1303,14 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		fmt.Fprintf(w, "type %s interface{}\n\n", name)
 		return nil
 	}
-	if (ct.Sequence != nil && ct.Sequence.Any != nil) || (ct.Choice != nil && ct.Choice.Any != nil) {
-		if len(ct.Sequence.Elements) == 0 || len(ct.Choice.Elements) == 0 {
+	if ct.Sequence != nil && ct.Sequence.Any != nil {
+		if len(ct.Sequence.Elements) == 0 {
+			fmt.Fprintf(w, "type %s []interface{}\n\n", name)
+			return nil
+		}
+	}
+	if ct.Choice != nil && ct.Choice.Any != nil {
+		if len(ct.Choice.Elements) == 0 {
 			fmt.Fprintf(w, "type %s []interface{}\n\n", name)
 			return nil
 		}
@@ -1487,7 +1493,7 @@ func (ge *goEncoder) genElementField(w io.Writer, el *wsdl.Element) {
 	var slicetype string
 	if el.Type == "" && el.ComplexType != nil {
 		seq := el.ComplexType.Sequence
-		if seq == nil {
+		if seq == nil && el.ComplexType.Choice != nil {
 			seq = &wsdl.Sequence{
 				ComplexTypes: el.ComplexType.Choice.ComplexTypes,
 				Elements:     el.ComplexType.Choice.Elements,
