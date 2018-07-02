@@ -43,7 +43,9 @@ type AuthHeader struct {
 // Client is a SOAP client.
 type Client struct {
 	URL                    string               // URL of the server
+	UserAgent              string               // User-Agent header will be added to each request
 	Namespace              string               // SOAP Namespace
+	URNamespace            string               // Uniform Resource Namespace
 	ThisNamespace          string               // SOAP This-Namespace (tns)
 	ExcludeActionNamespace bool                 // Include Namespace to SOAP Action header
 	Envelope               string               // Optional SOAP Envelope
@@ -94,6 +96,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	setXMLType(reflect.ValueOf(in))
 	req := &Envelope{
 		EnvelopeAttr: c.Envelope,
+		URNAttr:      c.URNamespace,
 		NSAttr:       c.Namespace,
 		TNSAttr:      c.ThisNamespace,
 		XSIAttr:      XSINamespace,
@@ -157,6 +160,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 // RoundTrip implements the RoundTripper interface.
 func (c *Client) RoundTrip(in, out Message) error {
 	headerFunc := func(r *http.Request) {
+		if c.UserAgent != "" {
+			r.Header.Add("User-Agent", c.UserAgent)
+		}
 		var actionName, soapAction string
 		if in != nil {
 			soapAction = reflect.TypeOf(in).Elem().Name()
@@ -182,6 +188,9 @@ func (c *Client) RoundTrip(in, out Message) error {
 // that need to set the SOAPAction header.
 func (c *Client) RoundTripWithAction(soapAction string, in, out Message) error {
 	headerFunc := func(r *http.Request) {
+		if c.UserAgent != "" {
+			r.Header.Add("User-Agent", c.UserAgent)
+		}
 		var actionName string
 		ct := c.ContentType
 		if ct == "" {
@@ -225,6 +234,7 @@ type Envelope struct {
 	EnvelopeAttr string   `xml:"xmlns:SOAP-ENV,attr"`
 	NSAttr       string   `xml:"xmlns:ns,attr"`
 	TNSAttr      string   `xml:"xmlns:tns,attr,omitempty"`
+	URNAttr      string   `xml:"xmlns:urn,attr,omitempty"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"SOAP-ENV:Header"`
 	Body         Message  `xml:"SOAP-ENV:Body"`
