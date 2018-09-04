@@ -24,7 +24,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/grid-x/wsdl2go/wsdl"
 )
 
 // An Encoder generates Go code from WSDL definitions.
@@ -659,7 +659,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		rpcStyle = d.Binding.BindingType.Style == "rpc"
 	}
 
-	ge.needsExtPkg["github.com/fiorix/wsdl2go/soap"] = true
+	ge.needsExtPkg["github.com/grid-x/wsdl2go/soap"] = true
 
 	// inputNames describe the accessors to the input parameter names
 	inputNames := make([]string, len(in))
@@ -832,8 +832,8 @@ func (ge *goEncoder) inputParams(op *wsdl.Operation) ([]*parameter, error) {
 		return nil, fmt.Errorf("operation %q wants input message %q but it's not defined", op.Name, im)
 	}
 
-	// TODO: I had to disable this for my use case - do other use cases still work with false?
-	return ge.genParams(req, false), nil
+	// TODO: I had to disable this for my use case - do other use cases still work with false? -> nope changed it back to true
+	return ge.genParams(req, true), nil
 }
 
 // returns list of function output parameters plus error.

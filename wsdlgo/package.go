@@ -3,7 +3,7 @@ package wsdlgo
 import (
 	"strings"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/grid-x/wsdl2go/wsdl"
 )
 
 const (

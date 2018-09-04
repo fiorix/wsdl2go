@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/grid-x/wsdl2go/wsdl"
 )
 
 func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions {

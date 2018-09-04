@@ -1,7 +1,7 @@
 # wsdl2go
 [![Build Status](https://travis-ci.org/fiorix/wsdl2go.svg)](https://travis-ci.org/fiorix/wsdl2go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fiorix/wsdl2go)](https://goreportcard.com/report/github.com/fiorix/wsdl2go)
-[![GoDoc](https://godoc.org/github.com/fiorix/wsdl2go?status.svg)](https://godoc.org/github.com/fiorix/wsdl2go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/grid-x/wsdl2go)](https://goreportcard.com/report/github.com/grid-x/wsdl2go)
+[![GoDoc](https://godoc.org/github.com/grid-x/wsdl2go?status.svg)](https://godoc.org/github.com/grid-x/wsdl2go)
 
 wsdl2go is a command line tool to generate [Go](https://golang.org) code
 from [WSDL](https://en.wikipedia.org/wiki/Web_Services_Description_Language).
@@ -9,7 +9,7 @@ from [WSDL](https://en.wikipedia.org/wiki/Web_Services_Description_Language).
 Download:
 
 ```
-go get github.com/fiorix/wsdl2go
+go get github.com/grid-x/wsdl2go
 ```
 
 ### Usage
@@ -43,7 +43,7 @@ Example:
 import (
 	"/path/to/generated/example"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/grid-x/wsdl2go/soap"
 )
 
 func main() {

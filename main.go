@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/fiorix/wsdl2go/wsdl"
-	"github.com/fiorix/wsdl2go/wsdlgo"
+	"github.com/grid-x/wsdl2go/wsdl"
+	"github.com/grid-x/wsdl2go/wsdlgo"
 )
 
 var version = "tip"
