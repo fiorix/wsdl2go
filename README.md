@@ -1,6 +1,6 @@
 # wsdl2go
 
-[![Build Status](https://travis-ci.org/digitalsparky/wsdl2go.svg)](https://travis-ci.org/digitalsparky/wsdl2go)
+[![Build Status](https://travis-ci.org/grid-x/wsdl2go.svg)](https://travis-ci.org/grid-x/wsdl2go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/grid-x/wsdl2go)](https://goreportcard.com/report/github.com/grid-x/wsdl2go)
 [![GoDoc](https://godoc.org/github.com/grid-x/wsdl2go?status.svg)](https://godoc.org/github.com/grid-x/wsdl2go)
 
