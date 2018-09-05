@@ -1320,7 +1320,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 		if restr != nil && len(restr.Attributes) == 1 && restr.Attributes[0].ArrayType != "" {
 			fmt.Fprintf(w, "type %s struct {\n", name)
 			typ := strings.SplitN(trimns(restr.Attributes[0].ArrayType), "[", 2)[0]
-			fmt.Fprintf(w, "Items []*%s `xml:\"item,omitempty\" json:\"item,omitempty\" yaml:\"item,omitempty\"`\n", typ)
+			fmt.Fprintf(w, "Items []%s `xml:\"item,omitempty\" json:\"item,omitempty\" yaml:\"item,omitempty\"`\n", ge.wsdl2goType(typ))
 			fmt.Fprintf(w, "}\n\n")
 			return nil
 		}
