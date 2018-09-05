@@ -21,7 +21,7 @@ type StockQuotePortType interface {
 
 // ArrayOfFloat was auto-generated from WSDL.
 type ArrayOfFloat struct {
-	Items []*float `xml:"item,omitempty" json:"item,omitempty" yaml:"item,omitempty"`
+	Items []float64 `xml:"item,omitempty" json:"item,omitempty" yaml:"item,omitempty"`
 }
 
 // Operation wrapper for GetTradePrices.
