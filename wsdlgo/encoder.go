@@ -1325,7 +1325,8 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 			return nil
 		}
 	}
-	if c > 2 && len(ct.Attributes) == 0 {
+
+	if c > 2 && len(ct.Attributes) == 0 && ct.SimpleContent == nil {
 		fmt.Fprintf(w, "type %s struct {\n", name)
 		ge.genXMLName(w, d.TargetNamespace, name)
 		fmt.Fprintf(w, "}\n\n")
@@ -1333,6 +1334,7 @@ func (ge *goEncoder) genGoStruct(w io.Writer, d *wsdl.Definitions, ct *wsdl.Comp
 	}
 	fmt.Fprintf(w, "type %s struct {\n", name)
 	ge.genXMLName(w, d.TargetNamespace, name)
+
 	err := ge.genStructFields(w, d, ct)
 
 	if ct.ComplexContent != nil && ct.ComplexContent.Extension != nil {
@@ -1371,6 +1373,12 @@ func (ge *goEncoder) genStructFields(w io.Writer, d *wsdl.Definitions, ct *wsdl.
 	if err != nil {
 		return err
 	}
+
+	err = ge.genSimpleContent(w, d, ct)
+	if err != nil {
+		return err
+	}
+
 	return ge.genElements(w, ct)
 }
 
@@ -1453,6 +1461,29 @@ func (ge *goEncoder) genComplexContent(w io.Writer, d *wsdl.Definitions, ct *wsd
 		}
 
 	}
+	return nil
+}
+
+func (ge *goEncoder) genSimpleContent(w io.Writer, d *wsdl.Definitions, ct *wsdl.ComplexType) error {
+	if ct.SimpleContent == nil || ct.SimpleContent.Extension == nil {
+		return nil
+	}
+	ext := ct.SimpleContent.Extension
+	if ext.Base != "" {
+		base, exists := ge.ctypes[trimns(ext.Base)]
+		if exists {
+			err := ge.genStructFields(w, d, base)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, attr := range ext.Attributes {
+		ge.genAttributeField(w, attr)
+	}
+
+	// sequence, choice, etc. are not supported in simpleContent tags.
 	return nil
 }
 

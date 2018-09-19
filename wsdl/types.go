@@ -125,10 +125,18 @@ type ComplexType struct {
 	Doc             string          `xml:"annotation>documentation"`
 	AllElements     []*Element      `xml:"all>element"`
 	ComplexContent  *ComplexContent `xml:"complexContent"`
+	SimpleContent   *SimpleContent  `xml:"simpleContent"`
 	Sequence        *Sequence       `xml:"sequence"`
 	Choice          *Choice         `xml:"choice"`
 	Attributes      []*Attribute    `xml:"attribute"`
 	TargetNamespace string
+}
+
+// SimpleContent describes simple content within a complex type.
+type SimpleContent struct {
+	XMLName     xml.Name     `xml:"simpleContent"`
+	Extension   *Extension   `xml:"extension"`
+	Restriction *Restriction `xml:"restriction"`
 }
 
 // ComplexContent describes complex content within a complex type. Usually
