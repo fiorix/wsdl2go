@@ -1468,14 +1468,21 @@ func (ge *goEncoder) genSimpleContent(w io.Writer, d *wsdl.Definitions, ct *wsdl
 	if ct.SimpleContent == nil || ct.SimpleContent.Extension == nil {
 		return nil
 	}
+
 	ext := ct.SimpleContent.Extension
 	if ext.Base != "" {
-		base, exists := ge.ctypes[trimns(ext.Base)]
+		baseComplex, exists := ge.ctypes[trimns(ext.Base)]
 		if exists {
-			err := ge.genStructFields(w, d, base)
+			err := ge.genStructFields(w, d, baseComplex)
 			if err != nil {
 				return err
 			}
+		} else {
+			// otherwise it's a simple type
+			ge.genElementField(w, &wsdl.Element{
+				Type: trimns(ext.Base),
+				Name: "Content",
+			})
 		}
 	}
 
@@ -1604,6 +1611,7 @@ func (ge *goEncoder) writeComments(w io.Writer, typeName, comment string) {
 		if line == "" {
 			count, line = 2, "//"
 		}
+
 		count += len(word)
 		if count > 60 {
 			fmt.Fprintf(w, "%s %s\n", line, word)
