@@ -1386,7 +1386,18 @@ func (ge *goEncoder) genOpStructMessage(w io.Writer, d *wsdl.Definitions, name s
 	}
 
 	for _, part := range message.Parts {
-		wsdlType := part.Type
+		var wsdlType string
+		switch {
+		case part.Type != "":
+			wsdlType = part.Type
+		case part.Element != "":
+			elName := trimns(part.Element)
+			if el, ok := ge.elements[elName]; ok {
+				wsdlType = ge.wsdl2goType(trimns(el.Type))
+			} else {
+				wsdlType = ge.wsdl2goType(part.Element)
+			}
+		}
 
 		// Probably soap12
 		if wsdlType == "" {
