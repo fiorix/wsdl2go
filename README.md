@@ -1,15 +1,19 @@
 # wsdl2go
-[![Build Status](https://travis-ci.org/fiorix/wsdl2go.svg)](https://travis-ci.org/fiorix/wsdl2go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fiorix/wsdl2go)](https://goreportcard.com/report/github.com/fiorix/wsdl2go)
-[![GoDoc](https://godoc.org/github.com/fiorix/wsdl2go?status.svg)](https://godoc.org/github.com/fiorix/wsdl2go)
+[![Build Status](https://travis-ci.org/digitalsparky/wsdl2go.svg)](https://travis-ci.org/digitalsparky/wsdl2go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/digitalsparky/wsdl2go)](https://goreportcard.com/report/github.com/digitalsparky/wsdl2go)
+[![GoDoc](https://godoc.org/github.com/digitalsparky/wsdl2go?status.svg)](https://godoc.org/github.com/digitalsparky/wsdl2go)
 
 wsdl2go is a command line tool to generate [Go](https://golang.org) code
 from [WSDL](https://en.wikipedia.org/wiki/Web_Services_Description_Language).
 
+Forked from https://github.com/fiorix/wsdl2go, with some character set modifications.
+
+Due to modifications, only works with Golang 1.9
+
 Download:
 
 ```
-go get github.com/fiorix/wsdl2go
+go get github.com/digitalsparky/wsdl2go
 ```
 
 ### Usage
@@ -43,7 +47,7 @@ Example:
 import (
 	"/path/to/generated/example"
 
-	"github.com/fiorix/wsdl2go/soap"
+	"github.com/digitalsparky/wsdl2go/soap"
 )
 
 func main() {
