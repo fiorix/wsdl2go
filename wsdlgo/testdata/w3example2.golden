@@ -16,13 +16,13 @@ func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
 	// DestroySession was auto-generated from WSDL.
-	DestroySession(body *DestroySessionRequest) (*DestroySessionResponse, error)
+	DestroySession(DestroySessionRequest *DestroySessionRequest) (*DestroySessionResponse, error)
 
 	// GetLastTradePrice was auto-generated from WSDL.
-	GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error)
+	GetLastTradePrice(TradePriceRequest *TradePriceRequest) (*TradePrice, error)
 
 	// GetSession was auto-generated from WSDL.
-	GetSession(body *GetSessionRequest) (*GetSessionResponse, error)
+	GetSession(GetSessionRequest *GetSessionRequest) (*GetSessionResponse, error)
 }
 
 // DestroySessionRequest was auto-generated from WSDL.
@@ -56,37 +56,37 @@ type TradePriceRequest struct {
 // Operation wrapper for DestroySession.
 // OperationDestroySessionInput was auto-generated from WSDL.
 type OperationDestroySessionInput struct {
-	Body *DestroySessionRequest `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	DestroySessionRequest *DestroySessionRequest `xml:"DestroySessionRequest,omitempty" json:"DestroySessionRequest,omitempty" yaml:"DestroySessionRequest,omitempty"`
 }
 
 // Operation wrapper for DestroySession.
 // OperationDestroySessionOutput was auto-generated from WSDL.
 type OperationDestroySessionOutput struct {
-	Body *DestroySessionResponse `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	DestroySessionResponse *DestroySessionResponse `xml:"DestroySessionResponse,omitempty" json:"DestroySessionResponse,omitempty" yaml:"DestroySessionResponse,omitempty"`
 }
 
 // Operation wrapper for GetLastTradePrice.
 // OperationGetLastTradePriceInput was auto-generated from WSDL.
 type OperationGetLastTradePriceInput struct {
-	Body *TradePriceRequest `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	TradePriceRequest *TradePriceRequest `xml:"TradePriceRequest,omitempty" json:"TradePriceRequest,omitempty" yaml:"TradePriceRequest,omitempty"`
 }
 
 // Operation wrapper for GetLastTradePrice.
 // OperationGetLastTradePriceOutput was auto-generated from WSDL.
 type OperationGetLastTradePriceOutput struct {
-	Body *TradePrice `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	TradePrice *TradePrice `xml:"TradePrice,omitempty" json:"TradePrice,omitempty" yaml:"TradePrice,omitempty"`
 }
 
 // Operation wrapper for GetSession.
 // OperationGetSessionInput was auto-generated from WSDL.
 type OperationGetSessionInput struct {
-	Body *GetSessionRequest `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	GetSessionRequest *GetSessionRequest `xml:"GetSessionRequest,omitempty" json:"GetSessionRequest,omitempty" yaml:"GetSessionRequest,omitempty"`
 }
 
 // Operation wrapper for GetSession.
 // OperationGetSessionOutput was auto-generated from WSDL.
 type OperationGetSessionOutput struct {
-	Body *GetSessionResponse `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	GetSessionResponse *GetSessionResponse `xml:"GetSessionResponse,omitempty" json:"GetSessionResponse,omitempty" yaml:"GetSessionResponse,omitempty"`
 }
 
 // stockQuotePortType implements the StockQuotePortType interface.
@@ -95,12 +95,12 @@ type stockQuotePortType struct {
 }
 
 // DestroySession was auto-generated from WSDL.
-func (p *stockQuotePortType) DestroySession(body *DestroySessionRequest) (*DestroySessionResponse, error) {
+func (p *stockQuotePortType) DestroySession(DestroySessionRequest *DestroySessionRequest) (*DestroySessionResponse, error) {
 	α := struct {
 		OperationDestroySessionInput `xml:"tns:DestroySession"`
 	}{
 		OperationDestroySessionInput{
-			body,
+			DestroySessionRequest,
 		},
 	}
 
@@ -110,16 +110,16 @@ func (p *stockQuotePortType) DestroySession(body *DestroySessionRequest) (*Destr
 	if err := p.cli.RoundTripWithAction("http://example.com/DestroySession", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Body, nil
+	return γ.DestroySessionResponse, nil
 }
 
 // GetLastTradePrice was auto-generated from WSDL.
-func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error) {
+func (p *stockQuotePortType) GetLastTradePrice(TradePriceRequest *TradePriceRequest) (*TradePrice, error) {
 	α := struct {
 		OperationGetLastTradePriceInput `xml:"tns:GetLastTradePrice"`
 	}{
 		OperationGetLastTradePriceInput{
-			body,
+			TradePriceRequest,
 		},
 	}
 
@@ -129,16 +129,16 @@ func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradeP
 	if err := p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Body, nil
+	return γ.TradePrice, nil
 }
 
 // GetSession was auto-generated from WSDL.
-func (p *stockQuotePortType) GetSession(body *GetSessionRequest) (*GetSessionResponse, error) {
+func (p *stockQuotePortType) GetSession(GetSessionRequest *GetSessionRequest) (*GetSessionResponse, error) {
 	α := struct {
 		OperationGetSessionInput `xml:"tns:GetSession"`
 	}{
 		OperationGetSessionInput{
-			body,
+			GetSessionRequest,
 		},
 	}
 
@@ -148,5 +148,5 @@ func (p *stockQuotePortType) GetSession(body *GetSessionRequest) (*GetSessionRes
 	if err := p.cli.RoundTripWithAction("http://example.com/GetSession", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Body, nil
+	return γ.GetSessionResponse, nil
 }

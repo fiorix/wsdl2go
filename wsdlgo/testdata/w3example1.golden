@@ -16,7 +16,7 @@ func NewGetEndorsingBoarderPortType(cli *soap.Client) GetEndorsingBoarderPortTyp
 // and defines interface for the remote service. Useful for testing.
 type GetEndorsingBoarderPortType interface {
 	// GetEndorsingBoarder was auto-generated from WSDL.
-	GetEndorsingBoarder(body *GetEndorsingBoarder) (*GetEndorsingBoarderResponse, error)
+	GetEndorsingBoarder(GetEndorsingBoarder *GetEndorsingBoarder) (*GetEndorsingBoarderResponse, error)
 }
 
 // GetEndorsingBoarder was auto-generated from WSDL.
@@ -39,14 +39,14 @@ type GetEndorsingBoarderResponse struct {
 // OperationGetEndorsingBoarderRequest was auto-generated from
 // WSDL.
 type OperationGetEndorsingBoarderRequest struct {
-	Body *GetEndorsingBoarder `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	GetEndorsingBoarder *GetEndorsingBoarder `xml:"GetEndorsingBoarder,omitempty" json:"GetEndorsingBoarder,omitempty" yaml:"GetEndorsingBoarder,omitempty"`
 }
 
 // Operation wrapper for GetEndorsingBoarder.
 // OperationGetEndorsingBoarderResponse was auto-generated from
 // WSDL.
 type OperationGetEndorsingBoarderResponse struct {
-	Body *GetEndorsingBoarderResponse `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	GetEndorsingBoarderResponse *GetEndorsingBoarderResponse `xml:"GetEndorsingBoarderResponse,omitempty" json:"GetEndorsingBoarderResponse,omitempty" yaml:"GetEndorsingBoarderResponse,omitempty"`
 }
 
 // getEndorsingBoarderPortType implements the GetEndorsingBoarderPortType interface.
@@ -55,12 +55,12 @@ type getEndorsingBoarderPortType struct {
 }
 
 // GetEndorsingBoarder was auto-generated from WSDL.
-func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(body *GetEndorsingBoarder) (*GetEndorsingBoarderResponse, error) {
+func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(GetEndorsingBoarder *GetEndorsingBoarder) (*GetEndorsingBoarderResponse, error) {
 	α := struct {
 		OperationGetEndorsingBoarderRequest `xml:"es:GetEndorsingBoarder"`
 	}{
 		OperationGetEndorsingBoarderRequest{
-			body,
+			GetEndorsingBoarder,
 		},
 	}
 
@@ -70,5 +70,5 @@ func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(body *GetEndorsingBoar
 	if err := p.cli.RoundTripWithAction("http://www.snowboard-info.com/EndorsementSearch", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Body, nil
+	return γ.GetEndorsingBoarderResponse, nil
 }

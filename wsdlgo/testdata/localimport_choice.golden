@@ -16,7 +16,7 @@ func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
 	// GetLastTradePrice was auto-generated from WSDL.
-	GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error)
+	GetLastTradePrice(TradePriceRequest *TradePriceRequest) (*TradePrice, error)
 }
 
 // TradePrice was auto-generated from WSDL.
@@ -39,7 +39,7 @@ type OperationGetLastTradePriceInput struct {
 // Operation wrapper for GetLastTradePrice.
 // OperationGetLastTradePriceOutput was auto-generated from WSDL.
 type OperationGetLastTradePriceOutput struct {
-	Body *TradePrice `xml:"body,omitempty" json:"body,omitempty" yaml:"body,omitempty"`
+	TradePrice *TradePrice `xml:"TradePrice,omitempty" json:"TradePrice,omitempty" yaml:"TradePrice,omitempty"`
 }
 
 // stockQuotePortType implements the StockQuotePortType interface.
@@ -48,12 +48,12 @@ type stockQuotePortType struct {
 }
 
 // GetLastTradePrice was auto-generated from WSDL.
-func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradePrice, error) {
+func (p *stockQuotePortType) GetLastTradePrice(TradePriceRequest *TradePriceRequest) (*TradePrice, error) {
 	α := struct {
 		OperationGetLastTradePriceInput `xml:"tns:GetLastTradePrice"`
 	}{
 		OperationGetLastTradePriceInput{
-			body,
+			TradePriceRequest,
 		},
 	}
 
@@ -63,5 +63,5 @@ func (p *stockQuotePortType) GetLastTradePrice(body *TradePriceRequest) (*TradeP
 	if err := p.cli.RoundTripWithAction("http://example.com/GetLastTradePrice", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Body, nil
+	return γ.TradePrice, nil
 }
