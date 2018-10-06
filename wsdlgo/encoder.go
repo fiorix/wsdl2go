@@ -914,6 +914,7 @@ func maskKeywordUsage(code string) string {
 func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 	params := make([]*parameter, len(m.Parts))
 	for i, param := range m.Parts {
+		code := param.Name
 		var t, token, elName string
 		switch {
 		case param.Type != "":
@@ -922,6 +923,7 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 			token = t
 		case param.Element != "":
 			elName = trimns(param.Element)
+			code = goSymbol(param.Element)
 			if el, ok := ge.elements[elName]; ok {
 				t = ge.wsdl2goType(trimns(el.Type))
 			} else {
@@ -929,7 +931,7 @@ func (ge *goEncoder) genParams(m *wsdl.Message, needsTag bool) []*parameter {
 			}
 			token = trimns(param.Element)
 		}
-		params[i] = &parameter{code: param.Name, dataType: t, xmlToken: token}
+		params[i] = &parameter{code: code, dataType: t, xmlToken: token}
 		if needsTag {
 			ge.needsStdPkg["encoding/xml"] = true
 			ge.needsTag[strings.TrimPrefix(t, "*")] = elName
@@ -1401,9 +1403,21 @@ func (ge *goEncoder) genOpStructMessage(w io.Writer, d *wsdl.Definitions, name s
 			wsdlType = part.Element
 		}
 
+		partName := part.Name
+		if part.Element != "" {
+			elName := trimns(part.Element)
+			if el, ok := ge.elements[elName]; ok {
+				partName = trimns(el.Name)
+			} else if el, ok := ge.ctypes[elName]; ok {
+				partName = trimns(el.Name)
+			} else if el, ok := ge.stypes[elName]; ok {
+				partName = trimns(el.Name)
+			}
+		}
+
 		ge.genElementField(w, &wsdl.Element{
 			XMLName: part.XMLName,
-			Name:    part.Name,
+			Name:    partName,
 			Type:    wsdlType,
 			// TODO: Maybe one could make guesses about nillable?
 		})
