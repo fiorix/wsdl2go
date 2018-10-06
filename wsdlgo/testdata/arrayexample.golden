@@ -16,7 +16,7 @@ func NewStockQuotePortType(cli *soap.Client) StockQuotePortType {
 // and defines interface for the remote service. Useful for testing.
 type StockQuotePortType interface {
 	// GetTradePrices was auto-generated from WSDL.
-	GetTradePrices(tickerSymbol string) (*ArrayOfFloat, error)
+	GetTradePrices(String string) (*ArrayOfFloat, error)
 }
 
 // ArrayOfFloat was auto-generated from WSDL.
@@ -42,12 +42,12 @@ type stockQuotePortType struct {
 }
 
 // GetTradePrices was auto-generated from WSDL.
-func (p *stockQuotePortType) GetTradePrices(tickerSymbol string) (*ArrayOfFloat, error) {
+func (p *stockQuotePortType) GetTradePrices(String string) (*ArrayOfFloat, error) {
 	α := struct {
 		M OperationGetTradePricesInput `xml:"tns:GetTradePrices"`
 	}{
 		OperationGetTradePricesInput{
-			&tickerSymbol,
+			&String,
 		},
 	}
 
