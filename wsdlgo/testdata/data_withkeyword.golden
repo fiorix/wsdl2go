@@ -16,7 +16,7 @@ func NewDataEndpointPortType(cli *soap.Client) DataEndpointPortType {
 // and defines interface for the remote service. Useful for testing.
 type DataEndpointPortType interface {
 	// GetData was auto-generated from WSDL.
-	GetData(_return *GetData) (*GetDataResp, error)
+	GetData(GetData *GetData) (*GetDataResp, error)
 }
 
 // BaseReq was auto-generated from WSDL.
@@ -99,13 +99,13 @@ type GetDataResp struct {
 // Operation wrapper for GetData.
 // OperationGetDataReq was auto-generated from WSDL.
 type OperationGetDataReq struct {
-	Return *GetData `xml:"return,omitempty" json:"return,omitempty" yaml:"return,omitempty"`
+	GetData *GetData `xml:"getData,omitempty" json:"getData,omitempty" yaml:"getData,omitempty"`
 }
 
 // Operation wrapper for GetData.
 // OperationGetDataResp was auto-generated from WSDL.
 type OperationGetDataResp struct {
-	Return *GetDataResp `xml:"return,omitempty" json:"return,omitempty" yaml:"return,omitempty"`
+	GetDataResp *GetDataResp `xml:"getDataResp,omitempty" json:"getDataResp,omitempty" yaml:"getDataResp,omitempty"`
 }
 
 // dataEndpointPortType implements the DataEndpointPortType interface.
@@ -114,12 +114,12 @@ type dataEndpointPortType struct {
 }
 
 // GetData was auto-generated from WSDL.
-func (p *dataEndpointPortType) GetData(_return *GetData) (*GetDataResp, error) {
+func (p *dataEndpointPortType) GetData(GetData *GetData) (*GetDataResp, error) {
 	α := struct {
 		OperationGetDataReq `xml:"ns:getData"`
 	}{
 		OperationGetDataReq{
-			_return,
+			GetData,
 		},
 	}
 
@@ -129,5 +129,5 @@ func (p *dataEndpointPortType) GetData(_return *GetData) (*GetDataResp, error) {
 	if err := p.cli.RoundTripWithAction("GetData", α, &γ); err != nil {
 		return nil, err
 	}
-	return γ.Return, nil
+	return γ.GetDataResp, nil
 }
