@@ -72,6 +72,7 @@ Because of some [limitations](https://github.com/golang/go/issues/14407) of XML 
 
 Types supported:
 
+- [x] byte
 - [x] int
 - [x] long (int64)
 - [x] float (float64)
