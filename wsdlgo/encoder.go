@@ -988,6 +988,8 @@ func (ge *goEncoder) wsdl2goType(t string) string {
 		return goSymbol(v)
 	}
 	switch strings.ToLower(v) {
+	case "byte", "unsignedbyte":
+		return "byte"
 	case "int":
 		return "int"
 	case "integer":
