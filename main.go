@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/digitalsparky/wsdl2go/wsdl"
-	"github.com/digitalsparky/wsdl2go/wsdlgo"
+	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/fiorix/wsdl2go/wsdlgo"
 )
 
 var version = "tip"
