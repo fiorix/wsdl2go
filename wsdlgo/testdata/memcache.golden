@@ -95,11 +95,13 @@ type memoryServicePortType struct {
 // Get was auto-generated from WSDL.
 func (p *memoryServicePortType) Get(key string) (*GetResponse, error) {
 	α := struct {
-		M OperationGetRequest `xml:"tns:Get"`
+		M         OperationGetRequest `xml:"tns:Get"`
+		Namespace string              `xml:"xmlns,attr,omitempty"`
 	}{
 		OperationGetRequest{
 			&key,
 		},
+		"urn:examples:memoryservice",
 	}
 
 	γ := struct {
@@ -114,11 +116,13 @@ func (p *memoryServicePortType) Get(key string) (*GetResponse, error) {
 // GetMulti was auto-generated from WSDL.
 func (p *memoryServicePortType) GetMulti(keys *GetMultiRequest) (*GetMultiResponse, error) {
 	α := struct {
-		M OperationGetMultiRequest `xml:"tns:GetMulti"`
+		M         OperationGetMultiRequest `xml:"tns:GetMulti"`
+		Namespace string                   `xml:"xmlns,attr,omitempty"`
 	}{
 		OperationGetMultiRequest{
 			keys,
 		},
+		"urn:examples:memoryservice",
 	}
 
 	γ := struct {
@@ -133,11 +137,13 @@ func (p *memoryServicePortType) GetMulti(keys *GetMultiRequest) (*GetMultiRespon
 // Set was auto-generated from WSDL.
 func (p *memoryServicePortType) Set(info *SetRequest) (bool, error) {
 	α := struct {
-		M OperationSetRequest `xml:"tns:Set"`
+		M         OperationSetRequest `xml:"tns:Set"`
+		Namespace string              `xml:"xmlns,attr,omitempty"`
 	}{
 		OperationSetRequest{
 			info,
 		},
+		"urn:examples:memoryservice",
 	}
 
 	γ := struct {

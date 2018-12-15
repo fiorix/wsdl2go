@@ -625,13 +625,14 @@ var soapActionFuncT = template.Must(template.New("soapActionFunc").Parse(
 	`func (p *{{.PortType}}) {{.Name}}({{.Input}}) ({{.Output}}) {
 	α := struct {
 		{{if .OpInputDataType}}
-			{{if .RPCStyle}}M{{end}} {{.OpInputDataType}} ` + "`xml:\"{{.OpName}}\"`" + `
-		{{end}}
+			{{if .RPCStyle}}M{{end}} {{.OpInputDataType}} ` + "`xml:\"{{.OpName}}\"`" + `{{end}}
+			{{if .InputNamespace}}Namespace string ` + "`xml:\"xmlns,attr,omitempty\"`" + `{{end}}
 	}{
 		{{if .OpInputDataType}}{{.OpInputDataType}} {
 			{{range $index, $element := .InputNames}}{{$element}},
 			{{end}}
 		},{{end}}
+		{{if .InputNamespace}}"{{.InputNamespace}}",{{end}}
 	}
 
 	γ := struct {
@@ -738,13 +739,19 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 
 	soapFunctionName := "RoundTripSoap12"
 	soapAction := ""
+	inputNamespace := ""
 	if bindingOp, exists := ge.soapOps[op.Name]; exists {
 		soapAction = bindingOp.Operation.Action
 		if soapAction == "" {
 			soapFunctionName = "RoundTripWithAction"
 			soapAction = bindingOp.Operation11.Action
 		}
+		input := bindingOp.Input
+		if input != nil {
+			inputNamespace = input.Namespace
+		}
 	}
+
 	if soapAction != "" {
 		soapActionFuncT.Execute(w, &struct {
 			RoundTripType      string
@@ -762,6 +769,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			Output             string
 			RetDef             string
 			RPCStyle           bool
+			InputNamespace     string
 		}{
 			soapFunctionName,
 			soapAction,
@@ -778,6 +786,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			strings.Join(outputDataTypes, ","),
 			strings.Join(retDefaults, ","),
 			rpcStyle,
+			inputNamespace,
 		})
 		return true
 	}

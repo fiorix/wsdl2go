@@ -58,10 +58,12 @@ type getEndorsingBoarderPortType struct {
 func (p *getEndorsingBoarderPortType) GetEndorsingBoarder(GetEndorsingBoarder *GetEndorsingBoarder) (*GetEndorsingBoarderResponse, error) {
 	α := struct {
 		OperationGetEndorsingBoarderRequest `xml:"es:GetEndorsingBoarder"`
+		Namespace                           string `xml:"xmlns,attr,omitempty"`
 	}{
 		OperationGetEndorsingBoarderRequest{
 			GetEndorsingBoarder,
 		},
+		"http://schemas.snowboard-info.com/EndorsementSearch.xsd",
 	}
 
 	γ := struct {

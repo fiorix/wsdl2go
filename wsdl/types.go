@@ -308,6 +308,7 @@ type SOAP11Operation struct {
 
 // BindingIO describes the IO binding of SOAP operations. See IO for details.
 type BindingIO struct {
-	Parts string `xml:"parts,attr"`
-	Use   string `xml:"use,attr"`
+	Parts     string `xml:"parts,attr"`
+	Use       string `xml:"use,attr"`
+	Namespace string `xml:"namespace,attr"`
 }

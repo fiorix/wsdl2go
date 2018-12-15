@@ -44,11 +44,13 @@ type stockQuotePortType struct {
 // GetTradePrices was auto-generated from WSDL.
 func (p *stockQuotePortType) GetTradePrices(String string) (*ArrayOfFloat, error) {
 	α := struct {
-		M OperationGetTradePricesInput `xml:"tns:GetTradePrices"`
+		M         OperationGetTradePricesInput `xml:"tns:GetTradePrices"`
+		Namespace string                       `xml:"xmlns,attr,omitempty"`
 	}{
 		OperationGetTradePricesInput{
 			&String,
 		},
+		"http://example.com/stockquote",
 	}
 
 	γ := struct {
