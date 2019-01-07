@@ -1,5 +1,8 @@
 sudo: false
 
+env:
+  - GO111MODULE=on
+
 language: go
 
 install:
