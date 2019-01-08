@@ -40,7 +40,7 @@ The process is this:
 
 Example:
 
-```
+```go
 import (
 	"/path/to/generated/example"
 
