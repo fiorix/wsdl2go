@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+
+	"golang.org/x/net/html/charset"
 )
 
 // XSINamespace is a link to the XML Schema instance namespace.
@@ -154,7 +156,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		Body    Message
 	}{Body: out}
 
-	return xml.NewDecoder(resp.Body).Decode(&marshalStructure)
+	decoder := xml.NewDecoder(resp.Body)
+	decoder.CharsetReader = charset.NewReaderLabel
+	return decoder.Decode(&marshalStructure)
 }
 
 // RoundTrip implements the RoundTripper interface.
