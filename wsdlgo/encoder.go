@@ -25,6 +25,7 @@ import (
 	"text/template"
 
 	"github.com/fiorix/wsdl2go/wsdl"
+	"golang.org/x/net/html/charset"
 )
 
 // An Encoder generates Go code from WSDL definitions.
@@ -339,7 +340,9 @@ func (ge *goEncoder) importRemote(loc string, v interface{}) error {
 
 		r = bufio.NewReader(file)
 	}
-	return xml.NewDecoder(r).Decode(v)
+	decoder := xml.NewDecoder(r)
+	decoder.CharsetReader = charset.NewReaderLabel
+	return decoder.Decode(&v)
 
 }
 

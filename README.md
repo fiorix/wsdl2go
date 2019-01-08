@@ -1,5 +1,6 @@
 # wsdl2go
-[![Build Status](https://travis-ci.org/fiorix/wsdl2go.svg)](https://travis-ci.org/fiorix/wsdl2go)
+
+[![Build Status](https://travis-ci.org/digitalsparky/wsdl2go.svg)](https://travis-ci.org/digitalsparky/wsdl2go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fiorix/wsdl2go)](https://goreportcard.com/report/github.com/fiorix/wsdl2go)
 [![GoDoc](https://godoc.org/github.com/fiorix/wsdl2go?status.svg)](https://godoc.org/github.com/fiorix/wsdl2go)
 
@@ -32,10 +33,10 @@ Here's how to use the generated code: let's say you have a WSDL that defines the
 
 The process is this:
 
-* Import the generated code
-* Create a soap.Client (and here you can configure SOAP authentication, for example)
-* Instantiate the service using your soap.Client
-* Call the service methods
+- Import the generated code
+- Create a soap.Client (and here you can configure SOAP authentication, for example)
+- Instantiate the service using your soap.Client
+- Call the service methods
 
 Example:
 
@@ -59,8 +60,8 @@ func main() {
 
 The soap.Client supports two forms of authentication:
 
-* Setting the "Pre" hook to a function that is run on all outbound HTTP requests, which can set HTTP headers and Basic Auth
-* Setting the Header attribute to an AuthHeader, to have it as a SOAP header (with username and password) in every request
+- Setting the "Pre" hook to a function that is run on all outbound HTTP requests, which can set HTTP headers and Basic Auth
+- Setting the Header attribute to an AuthHeader, to have it as a SOAP header (with username and password) in every request
 
 Note that only the **Document** style of SOAP is supported. The RPC style is currently not supported.
 

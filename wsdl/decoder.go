@@ -6,6 +6,8 @@ package wsdl
 import (
 	"encoding/xml"
 	"io"
+
+	"golang.org/x/net/html/charset"
 )
 
 // Unmarshal unmarshals WSDL documents starting from the <definitions> tag.
@@ -14,7 +16,9 @@ import (
 // WSDL XML that can be introspected to generate the Web Services API.
 func Unmarshal(r io.Reader) (*Definitions, error) {
 	var d Definitions
-	err := xml.NewDecoder(r).Decode(&d)
+	decoder := xml.NewDecoder(r)
+	decoder.CharsetReader = charset.NewReaderLabel
+	err := decoder.Decode(&d)
 	if err != nil {
 		return nil, err
 	}
