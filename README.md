@@ -1,6 +1,6 @@
 # wsdl2go
 
-[![Build Status](https://travis-ci.org/digitalsparky/wsdl2go.svg)](https://travis-ci.org/digitalsparky/wsdl2go)
+[![Build Status](https://travis-ci.org/fiorix/wsdl2go.svg)](https://travis-ci.org/fiorix/wsdl2go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fiorix/wsdl2go)](https://goreportcard.com/report/github.com/fiorix/wsdl2go)
 [![GoDoc](https://godoc.org/github.com/fiorix/wsdl2go?status.svg)](https://godoc.org/github.com/fiorix/wsdl2go)
 
