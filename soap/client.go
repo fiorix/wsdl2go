@@ -3,6 +3,7 @@ package soap
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -56,6 +57,7 @@ type Client struct {
 	Config                 *http.Client         // Optional HTTP client
 	Pre                    func(*http.Request)  // Optional hook to modify outbound requests
 	Post                   func(*http.Response) // Optional hook to snoop inbound responses
+	Ctx                    context.Context      // Optional variable to allow Context Tracking.
 }
 
 // XMLTyper is an abstract interface for types that can set an XML type.
@@ -132,6 +134,11 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 	if c.Pre != nil {
 		c.Pre(r)
 	}
+
+	if c.Ctx != nil {
+		r = r.WithContext(c.Ctx)
+	}
+
 	resp, err := cli.Do(r)
 	if err != nil {
 		return err
