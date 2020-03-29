@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/labstack/gommon/log"
+	"log"
 	"go/parser"
 	"go/token"
 	"io"
@@ -1370,7 +1370,7 @@ func (ge *goEncoder) genGoOpStruct(w io.Writer, d *wsdl.Definitions, bo *wsdl.Bi
 	function := ge.funcs[name]
 
 	if function.Input == nil {
-		log.Warnf("function input is nil! %v is %v", name, function)
+		log.Printf("function input is nil! %v is %v", name, function)
 	} else {
 		message := trimns(function.Input.Message)
 		inputMessage := ge.messages[message]
