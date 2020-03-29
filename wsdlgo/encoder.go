@@ -10,10 +10,10 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"log"
 	"go/parser"
 	"go/token"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -1382,8 +1382,12 @@ func (ge *goEncoder) genGoOpStruct(w io.Writer, d *wsdl.Definitions, bo *wsdl.Bi
 		}
 	}
 
-	// Output messages are always required
-	ge.genOpStructMessage(w, d, name, ge.messages[trimns(ge.funcs[bo.Name].Output.Message)])
+	if function.Output == nil {
+		log.Printf("function output is nil! %v is %v", name, function)
+	} else {
+		// Output messages are always required
+		ge.genOpStructMessage(w, d, name, ge.messages[trimns(ge.funcs[bo.Name].Output.Message)])
+	}
 
 	return nil
 }
