@@ -1369,24 +1369,26 @@ func (ge *goEncoder) genGoOpStruct(w io.Writer, d *wsdl.Definitions, bo *wsdl.Bi
 	name := goSymbol(bo.Name)
 	function := ge.funcs[name]
 
-	if function.Input == nil {
-		log.Printf("function input is nil! %v is %v", name, function)
-	} else {
-		message := trimns(function.Input.Message)
-		inputMessage := ge.messages[message]
+	if function != nil {
+		if function.Input == nil {
+			log.Printf("function input is nil! %v is %v", name, function)
+		} else {
+			message := trimns(function.Input.Message)
+			inputMessage := ge.messages[message]
 
-		// No-Op on operations which don't take arguments
-		// (These can be inlined, and don't need to pollute the file)
-		if len(inputMessage.Parts) > 0 {
-			ge.genOpStructMessage(w, d, name, inputMessage)
+			// No-Op on operations which don't take arguments
+			// (These can be inlined, and don't need to pollute the file)
+			if len(inputMessage.Parts) > 0 {
+				ge.genOpStructMessage(w, d, name, inputMessage)
+			}
 		}
-	}
 
-	if function.Output == nil {
-		log.Printf("function output is nil! %v is %v", name, function)
-	} else {
-		// Output messages are always required
-		ge.genOpStructMessage(w, d, name, ge.messages[trimns(ge.funcs[bo.Name].Output.Message)])
+		if function.Output == nil {
+			log.Printf("function output is nil! %v is %v", name, function)
+		} else {
+			// Output messages are always required
+			ge.genOpStructMessage(w, d, name, ge.messages[trimns(ge.funcs[bo.Name].Output.Message)])
+		}
 	}
 
 	return nil
@@ -1508,7 +1510,7 @@ func (ge *goEncoder) genSimpleContent(w io.Writer, d *wsdl.Definitions, ct *wsdl
 	ext := ct.SimpleContent.Extension
 	if ext.Base != "" {
 		baseComplex, exists := ge.ctypes[trimns(ext.Base)]
-		if exists {
+		if exists && strings.Index(baseComplex.TargetNamespace,"http://www.w3.org/") != 0 {
 			err := ge.genStructFields(w, d, baseComplex)
 			if err != nil {
 				return err
