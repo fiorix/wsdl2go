@@ -743,7 +743,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 	if len(out) > 0 && op.Output != nil {
 		operationOutputDataType = ge.sanitizedOperationsType(ge.messages[trimns(op.Output.Message)].Name)
 	} else if rpcStyle {
-		operationInputDataType = "struct{}"
+		operationOutputDataType = "struct{}"
 	}
 
 	soapFunctionName := "RoundTripSoap12"
