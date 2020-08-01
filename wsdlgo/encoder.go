@@ -13,7 +13,6 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -1369,8 +1368,16 @@ func (ge *goEncoder) genGoOpStruct(w io.Writer, d *wsdl.Definitions, bo *wsdl.Bi
 	name := goSymbol(bo.Name)
 	function := ge.funcs[name]
 
+	if function == nil {
+		function = ge.funcs[bo.Name]
+	}
+
+	if function == nil {
+		return nil
+	}
+
 	if function.Input == nil {
-		log.Printf("function input is nil! %v is %v", name, function)
+		//log.Printf("function input is nil! %v is %v", name, function)
 	} else {
 		message := trimns(function.Input.Message)
 		inputMessage := ge.messages[message]
@@ -1383,7 +1390,7 @@ func (ge *goEncoder) genGoOpStruct(w io.Writer, d *wsdl.Definitions, bo *wsdl.Bi
 	}
 
 	if function.Output == nil {
-		log.Printf("function output is nil! %v is %v", name, function)
+		//log.Printf("function output is nil! %v is %v", name, function)
 	} else {
 		// Output messages are always required
 		ge.genOpStructMessage(w, d, name, ge.messages[trimns(ge.funcs[bo.Name].Output.Message)])
@@ -1409,7 +1416,7 @@ func (ge *goEncoder) genStructFields(w io.Writer, d *wsdl.Definitions, ct *wsdl.
 func (ge *goEncoder) genOpStructMessage(w io.Writer, d *wsdl.Definitions, name string, message *wsdl.Message) {
 	sanitizedMessageName := ge.sanitizedOperationsType(message.Name)
 
-	ge.writeComments(w, sanitizedMessageName, "Operation wrapper for "+name+".")
+	ge.writeComments(w, sanitizedMessageName, "Operation wrapper for "+goSymbol(name)+".")
 	ge.writeComments(w, sanitizedMessageName, "")
 	fmt.Fprintf(w, "type %s struct {\n", sanitizedMessageName)
 	if elName, ok := ge.needsTag[sanitizedMessageName]; ok {
