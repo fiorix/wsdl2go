@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/fiorix/wsdl2go/wsdl"
+	"github.com/stretchr/testify/assert"
 )
 
 func LoadDefinition(t *testing.T, filename string, want error) *wsdl.Definitions {
@@ -56,6 +57,8 @@ var EncoderCases = []struct {
 	{F: "localimport-url.wsdl", G: "localimport.golden", E: nil},
 	{F: "localimport_choice.wsdl", G: "localimport_choice.golden", E: nil},
 	{F: "arrayexample.wsdl", G: "arrayexample.golden", E: nil},
+	{F: "radioreference.wsdl", G: "radioreference.golden", E: nil},
+	{F: "scannerservice.wsdl", G: "scannerservice.golden", E: nil},
 }
 
 func NewTestServer(t *testing.T) *httptest.Server {
@@ -92,9 +95,7 @@ func TestEncoder(t *testing.T) {
 			t.Errorf("test %d: missing golden file %q: %v", i, tc.G, err)
 		}
 		if !bytes.Equal(have.Bytes(), want) {
-			err := Diff("_diff", "go", want, have.Bytes())
-			t.Errorf("test %d, %q != %q: %v\ngenerated:\n%s\n",
-				i, tc.F, tc.G, err, have.Bytes())
+			assert.Equal(t, string(want), string(have.Bytes()))
 		}
 	}
 }

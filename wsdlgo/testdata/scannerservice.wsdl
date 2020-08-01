@@ -1,0 +1,335 @@
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:wsoap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+             xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:wsdp="http://schemas.xmlsoap.org/ws/2006/02/devprof"
+             xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+             xmlns:wsd="http://schemas.xmlsoap.org/ws/2005/04/discovery"
+             xmlns:wse="http://schemas.xmlsoap.org/ws/2004/08/eventing"
+             xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+             xmlns:wscn="http://schemas.microsoft.com/windows/2006/08/wdp/scan"
+             xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+             targetNamespace="http://schemas.microsoft.com/windows/2006/08/wdp/scan"
+             name="WSDScannerService">
+
+    <xs:annotation>
+        <xs:documentation>
+            WSD Scanner Service Web Service Description (WSDL) file
+            Copyright 2005-2006 Microsoft Corporation. All rights reserved
+        </xs:documentation>
+    </xs:annotation>
+
+    <wsp:Policy wsu:Id="ServicePolicy">
+        <wsdp:Profile />
+    </wsp:Policy>
+
+    <types>
+        <xs:schema targetNamespace="http://schemas.microsoft.com/windows/2006/08/wdp/scan">
+            <xs:include schemaLocation="WDPScan.xsd"/>
+        </xs:schema>
+    </types>
+
+    <message name="CreateScanJobRequestMsg">
+        <part name="body" element="wscn:CreateScanJobRequest"/>
+    </message>
+    <message name="CreateScanJobResponseMsg">
+        <part name="body" element="wscn:CreateScanJobResponse"/>
+    </message>
+    <message name="RetrieveImageRequestMsg">
+        <part name="body" element="wscn:RetrieveImageRequest"/>
+    </message>
+    <message name="RetrieveImageResponseMsg">
+        <part name="body" element="wscn:RetrieveImageResponse"/>
+    </message>
+    <message name="CancelJobRequestMsg">
+        <part name="body" element="wscn:CancelJobRequest"/>
+    </message>
+    <message name="CancelJobResponseMsg">
+        <part name="body" element="wscn:CancelJobResponse"/>
+    </message>
+    <message name="ValidateScanTicketRequestMsg">
+        <part name="body" element="wscn:ValidateScanTicketRequest"/>
+    </message>
+    <message name="ValidateScanTicketResponseMsg">
+        <part name="body" element="wscn:ValidateScanTicketResponse"/>
+    </message>
+    <message name="GetScannerElementsRequestMsg">
+        <part name="body" element="wscn:GetScannerElementsRequest"/>
+    </message>
+    <message name="GetScannerElementsResponseMsg">
+        <part name="body" element="wscn:GetScannerElementsResponse"/>
+    </message>
+    <message name="GetJobElementsRequestMsg">
+        <part name="body" element="wscn:GetJobElementsRequest"/>
+    </message>
+    <message name="GetJobElementsResponseMsg">
+        <part name="body" element="wscn:GetJobElementsResponse"/>
+    </message>
+    <message name="GetActiveJobsRequestMsg">
+        <part name="body" element="wscn:GetActiveJobsRequest"/>
+    </message>
+    <message name="GetActiveJobsResponseMsg">
+        <part name="body" element="wscn:GetActiveJobsResponse"/>
+    </message>
+    <message name="GetJobHistoryRequestMsg">
+        <part name="body" element="wscn:GetJobHistoryRequest"/>
+    </message>
+    <message name="GetJobHistoryResponseMsg">
+        <part name="body" element="wscn:GetJobHistoryResponse"/>
+    </message>
+
+    <message name="ScanAvailableEventMsg">
+        <part name="body" element="wscn:ScanAvailableEvent"/>
+    </message>
+    <message name="ScannerElementsChangeEventMsg">
+        <part name="body" element="wscn:ScannerElementsChangeEvent"/>
+    </message>
+    <message name="ScannerStatusSummaryEventMsg">
+        <part name="body" element="wscn:ScannerStatusSummaryEvent"/>
+    </message>
+    <message name="ScannerStatusConditionEventMsg">
+        <part name="body" element="wscn:ScannerStatusConditionEvent"/>
+    </message>
+    <message name="ScannerStatusConditionClearedEventMsg">
+        <part name="body" element="wscn:ScannerStatusConditionClearedEvent"/>
+    </message>
+    <message name="JobStatusEventMsg">
+        <part name="body" element="wscn:JobStatusEvent"/>
+    </message>
+    <message name="JobEndStateEventMsg">
+        <part name="body" element="wscn:JobEndStateEvent"/>
+    </message>
+
+    <portType name="ScannerServiceType" wse:EventSource="true">
+        <operation name="CreateScanJob">
+            <input message="wscn:CreateScanJobRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CreateScanJob" />
+            <output message="wscn:CreateScanJobResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CreateScanJobResponse" />
+        </operation>
+        <operation name="RetrieveImage">
+            <input message="wscn:RetrieveImageRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/RetrieveImage" />
+            <output message="wscn:RetrieveImageResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/RetrieveImageResponse" />
+        </operation>
+        <operation name="CancelJob">
+            <input message="wscn:CancelJobRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CancelJob" />
+            <output message="wscn:CancelJobResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CancelJobResponse" />
+        </operation>
+        <operation name="ValidateScanTicket">
+            <input message="wscn:ValidateScanTicketRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ValidateScanTicket" />
+            <output message="wscn:ValidateScanTicketResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ValidateScanTicketResponse" />
+        </operation>
+        <operation name="GetScannerElements">
+            <input message="wscn:GetScannerElementsRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetScannerElements" />
+            <output message="wscn:GetScannerElementsResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetScannerElementsResponse" />
+        </operation>
+        <operation name="GetJobElements">
+            <input message="wscn:GetJobElementsRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobElements" />
+            <output message="wscn:GetJobElementsResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobElementsResponse" />
+        </operation>
+        <operation name="GetActiveJobs">
+            <input message="wscn:GetActiveJobsRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetActiveJobs" />
+            <output message="wscn:GetActiveJobsResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetActiveJobsResponse" />
+        </operation>
+        <operation name="GetJobHistory">
+            <input message="wscn:GetJobHistoryRequestMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobHistory" />
+            <output message="wscn:GetJobHistoryResponseMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobHistoryResponse" />
+        </operation>
+        <operation name="ScanAvailableEvent">
+            <output message="wscn:ScanAvailableEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScanAvailableEvent" />
+        </operation>
+        <operation name="ScannerElementsChangeEvent">
+            <output message="wscn:ScannerElementsChangeEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerElementsChangeEvent" />
+        </operation>
+        <operation name="ScannerStatusSummaryEvent">
+            <output message="wscn:ScannerStatusSummaryEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusSummaryEvent" />
+        </operation>
+        <operation name="ScannerStatusConditionEvent">
+            <output message="wscn:ScannerStatusConditionEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusConditionEvent" />
+        </operation>
+        <operation name="ScannerStatusConditionClearedEvent">
+            <output message="wscn:ScannerStatusConditionClearedEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusConditionClearedEvent" />
+        </operation>
+        <operation name="JobStatusEvent">
+            <output message="wscn:JobStatusEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/JobStatusEvent" />
+        </operation>
+        <operation name="JobEndStateEvent">
+            <output message="wscn:JobEndStateEventMsg"
+                   wsa:Action="http://schemas.microsoft.com/windows/2006/08/wdp/scan/JobEndStateEvent" />
+        </operation>
+    </portType>
+    <binding name="ScannerServiceBinding" type="wscn:ScannerServiceType">
+        <wsoap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsp:PolicyReference URI="#ServicePolicy" />
+        <operation name="CreateScanJob">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CreateScanJob"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="RetrieveImage">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/RetrieveImage"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="CancelJob">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/CancelJob"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ValidateScanTicket">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ValidateScanTicket"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="GetScannerElements">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetScannerElements"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="GetJobElements">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobElements"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="GetActiveJobs">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetActiveJobs"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="GetJobHistory">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/GetJobHistory"
+                soapActionRequired="true" />
+            <input>
+                <wsoap12:body use="literal" />
+            </input>
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ScanAvailableEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScanAvailableEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ScannerElementsChangeEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerElementsChangeEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ScannerStatusSummaryEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusSummaryEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ScannerStatusConditionEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusConditionEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="ScannerStatusConditionClearedEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/ScannerStatusConditionClearedEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="JobStatusEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/JobStatusEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+        <operation name="JobEndStateEvent">
+            <wsoap12:operation
+                soapAction="http://schemas.microsoft.com/windows/2006/08/wdp/scan/JobEndStateEvent"
+                soapActionRequired="true" />
+            <output>
+                <wsoap12:body use="literal" />
+            </output>
+        </operation>
+    </binding>
+    <service name="ScannerService">
+        <port name="ScannerPort" binding="wscn:ScannerServiceBinding">
+            <wsoap12:address location="http://localhost/ScannerService/"/>
+        </port>
+    </service>
+</definitions>
+
