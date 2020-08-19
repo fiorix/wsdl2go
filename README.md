@@ -18,7 +18,7 @@ go get github.com/fiorix/wsdl2go
 tl;dr
 
 ```
-wsdl2go < file.wsdl > hello.go
+wsdl2go -i < file.wsdl > -o hello.go
 ```
 
 wsdl2go is a code generator that consumes WSDL from stdin (or file, or URL) and produces Go on stdout. The generated code contains services and methods described in the WSDL input, in a single output file. It is your responsibility to make it a package, in the sense that you put it in a directory that makes sense for you, and import it in your code later. Note that the generated code depends on the "soap" package that is part of this project.
