@@ -15,6 +15,7 @@ type BindingPackageName wsdl.Binding
 
 func (p BindingPackageName) String() string {
 	packageName := strings.Replace(strings.ToLower(p.Name), ".", "", -1)
+	packageName = strings.Replace(packageName, "-", "_", -1)
 	if packageName == "" {
 		packageName = fallbackPackageName
 	}
