@@ -543,11 +543,13 @@ func (ge *goEncoder) writePortType(w io.Writer, d *wsdl.Definitions) error {
 		return nil
 	}
 	n := d.PortType.Name
+	typeName := strings.ToLower(n)[:1] + n[1:]
+	typeName = strings.Replace(typeName, "-", "", -1)
 	return portTypeT.Execute(w, &struct {
 		Name      string
 		Interface string
 	}{
-		strings.ToLower(n)[:1] + n[1:],
+		typeName,
 		goSymbol(n),
 	})
 }
@@ -755,6 +757,10 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 			soapAction = bindingOp.Operation11.Action
 		}
 	}
+
+	portType := strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:]
+	portType = strings.Replace(portType, "-", "", -1)
+
 	if soapAction != "" {
 		soapActionFuncT.Execute(w, &struct {
 			RoundTripType      string
@@ -775,7 +781,7 @@ func (ge *goEncoder) writeSOAPFunc(w io.Writer, d *wsdl.Definitions, op *wsdl.Op
 		}{
 			soapFunctionName,
 			soapAction,
-			strings.ToLower(d.PortType.Name[:1]) + d.PortType.Name[1:],
+			portType,
 			goSymbol(op.Name),
 			namespacedOpName,
 			operationInputDataType,
