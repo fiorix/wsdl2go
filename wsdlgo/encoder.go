@@ -1625,14 +1625,16 @@ func (ge *goEncoder) genAttributeField(w io.Writer, attr *wsdl.Attribute) {
 		attr.Type = "string"
 	}
 
-	tag := fmt.Sprintf("%s,attr", attr.Name)
+	xmlTag := fmt.Sprintf("%s,attr", attr.Name)
+	jsonTag := attr.Name
 	fmt.Fprintf(w, "%s ", goSymbol(attr.Name))
 	typ := ge.wsdl2goType(attr.Type)
 	if attr.Nillable || attr.Min == 0 {
-		tag += ",omitempty"
+		xmlTag += ",omitempty"
+		jsonTag += ",omitempty"
 	}
 	fmt.Fprintf(w, "%s `xml:\"%s\" json:\"%s\" yaml:\"%s\"`\n",
-		typ, tag, tag, tag)
+		typ, xmlTag, jsonTag, jsonTag)
 }
 
 // writeComments writes comments to w, capped at ~80 columns.
